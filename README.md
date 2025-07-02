@@ -3,7 +3,7 @@
 A powerful, modular Python package for generating PhysiCell XML configuration files with comprehensive parameter coverage, intuitive API design, and maintainable architecture.
 
 [![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 ## 🚀 Overview
 
@@ -58,8 +58,8 @@ The configuration builder uses a modular composition pattern that provides:
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-repo/physicell_config.git
-cd physicell_config
+git clone https://github.com/marcorusc/PhysiCell_Settings.git
+cd PhysiCell_Settings
 
 # Install dependencies (if needed)
 pip install -r requirements.txt
@@ -308,7 +308,16 @@ See `CONTRIBUTING.md` for guidelines.
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the `LICENSE` file for details.
+This project is licensed under the GNU General Public License v3.0 - see the `LICENSE` file for details.
+
+**What this means for you:**
+- ✅ **Free to use** for research, education, and commercial purposes
+- ✅ **Modify and distribute** - but derivative works must also be GPL v3
+- ✅ **Strong attribution** - your contributions are protected and credited
+- ✅ **Patent protection** - includes explicit patent grant
+- 🔒 **Copyleft protection** - prevents proprietary forks that don't give back to the community
+
+**For scientific use:** Please cite this work in publications. For commercial use: derivative works must remain open source.
 
 ## 🙏 Acknowledgments
 
