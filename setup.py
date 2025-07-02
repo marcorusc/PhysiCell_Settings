@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="physicell-settings",
-    version="0.1.0",  # Start with a lower version for initial release
+    version="0.1.1",  # Added migration_bias parameter to set_motility() method
     author="Marco Ruscone",
     author_email="ym.ruscone94@gmail.com",
     description="User-friendly Python package for generating PhysiCell_settings.xml configuration files",

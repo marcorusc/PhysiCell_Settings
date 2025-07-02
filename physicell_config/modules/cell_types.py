@@ -132,7 +132,7 @@ class CellTypeModule(BaseModule):
             volume['fluid_fraction'] = fluid_fraction
     
     def set_motility(self, cell_type: str, speed: float = None, persistence_time: float = None,
-                    enabled: bool = None) -> None:
+                    migration_bias: float = None, enabled: bool = None) -> None:
         """Set motility parameters for a cell type."""
         if cell_type not in self.cell_types:
             raise ValueError(f"Cell type '{cell_type}' not found")
@@ -146,6 +146,10 @@ class CellTypeModule(BaseModule):
         if persistence_time is not None:
             self._validate_non_negative_number(persistence_time, "persistence time")
             motility['persistence_time'] = persistence_time
+        
+        if migration_bias is not None:
+            self._validate_number_in_range(migration_bias, -1.0, 1.0, "migration bias")
+            motility['migration_bias'] = migration_bias
         
         if enabled is not None:
             motility['enabled'] = enabled

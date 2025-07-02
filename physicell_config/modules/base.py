@@ -31,3 +31,10 @@ class BaseModule:
         """Validate that a value is a non-negative number."""
         if not isinstance(value, (int, float)) or value < 0:
             raise ValueError(f"{name} must be a non-negative number, got {value}")
+
+    def _validate_number_in_range(self, value: float, min_val: float, max_val: float, name: str) -> None:
+        """Validate that a value is within a specified range."""
+        if not isinstance(value, (int, float)):
+            raise ValueError(f"{name} must be a number, got {type(value).__name__}")
+        if value < min_val or value > max_val:
+            raise ValueError(f"{name} must be between {min_val} and {max_val}, got {value}")

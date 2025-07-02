@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools-scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "physicell-settings"
+version = "0.1.1"
+description = "User-friendly Python package for generating PhysiCell_settings.xml configuration files"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "GPL-3.0"}
+authors = [
+    {name = "Marco Ruscone", email = "ym.ruscone94@gmail.com"}
+]
+keywords = ["physicell", "agent-based-modeling", "computational-biology", "xml", "configuration"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/mruscone/PhysiCell_Settings"
+"Bug Tracker" = "https://github.com/mruscone/PhysiCell_Settings/issues"
+Documentation = "https://github.com/mruscone/PhysiCell_Settings#readme"
+"Source Code" = "https://github.com/mruscone/PhysiCell_Settings"
+
+[tool.setuptools.packages.find]
+include = ["physicell_config*"]
+
+[tool.setuptools.package-data]
+physicell_config = ["config/*.json"]

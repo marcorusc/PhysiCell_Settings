@@ -5,6 +5,24 @@ All notable changes to the PhysiCell Configuration Builder will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2025-07-02
+
+### 🔧 API Improvements
+
+#### Added
+- **Migration Bias Support** in CellTypeModule
+  - Added `migration_bias` parameter to `set_motility()` method
+  - Parameter accepts values between -1.0 and 1.0 (validated)
+  - Enables proper chemotaxis configuration for realistic cell behavior
+  
+- **Enhanced Validation**
+  - Added `_validate_number_in_range()` method to BaseModule
+  - Provides range validation for parameters like migration_bias
+  
+#### Enhanced
+- **Cell Motility Configuration** now supports all key PhysiCell motility parameters
+- **MCP Tool Compatibility** - Improved support for Model Context Protocol tools
+
 ## [1.0.0] - 2025-06-26
 
 ### 🎉 Initial Release
