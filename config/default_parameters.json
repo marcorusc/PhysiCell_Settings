@@ -1,0 +1,269 @@
+{
+  "cell_cycle_models": {
+    "live": {
+      "code": "5",
+      "name": "live",
+      "phase_transition_rates": {}
+    },
+    "flow_cytometry_separated": {
+      "code": "6",
+      "name": "Flow cytometry model (separated)",
+      "phase_durations": [
+        {"index": 0, "duration": 300.0, "fixed_duration": false},
+        {"index": 1, "duration": 480.0, "fixed_duration": true},
+        {"index": 2, "duration": 240.0, "fixed_duration": true},
+        {"index": 3, "duration": 60.0, "fixed_duration": true}
+      ]
+    }
+  },
+  "death_models": {
+    "apoptosis": {
+      "code": "100",
+      "name": "apoptosis",
+      "default_rate": 5.31667e-05,
+      "phase_durations": [
+        {"index": 0, "duration": 516.0, "fixed_duration": true}
+      ],
+      "parameters": {
+        "unlysed_fluid_change_rate": 0.05,
+        "lysed_fluid_change_rate": 0.0,
+        "cytoplasmic_biomass_change_rate": 1.66667e-02,
+        "nuclear_biomass_change_rate": 5.83333e-03,
+        "calcification_rate": 0.0,
+        "relative_rupture_volume": 2.0
+      }
+    },
+    "necrosis": {
+      "code": "101",
+      "name": "necrosis",
+      "default_rate": 0.0,
+      "phase_durations": [
+        {"index": 0, "duration": 0.0, "fixed_duration": true},
+        {"index": 1, "duration": 86400.0, "fixed_duration": true}
+      ],
+      "parameters": {
+        "unlysed_fluid_change_rate": 1.11667e-2,
+        "lysed_fluid_change_rate": 8.33333e-4,
+        "cytoplasmic_biomass_change_rate": 5.33333e-5,
+        "nuclear_biomass_change_rate": 2.16667e-3,
+        "calcification_rate": 0.0,
+        "relative_rupture_volume": 2.0
+      }
+    }
+  },
+  "volume_defaults": {
+    "total": 2494.0,
+    "fluid_fraction": 0.75,
+    "nuclear": 540.0,
+    "fluid_change_rate": 0.05,
+    "cytoplasmic_biomass_change_rate": 0.0045,
+    "nuclear_biomass_change_rate": 0.0055,
+    "calcified_fraction": 0.0,
+    "calcification_rate": 0.0,
+    "relative_rupture_volume": 2.0
+  },
+  "mechanics_defaults": {
+    "cell_cell_adhesion_strength": 0.4,
+    "cell_cell_repulsion_strength": 10.0,
+    "relative_maximum_adhesion_distance": 1.25,
+    "cell_adhesion_affinities": {
+      "default": 1.0
+    },
+    "attachment_elastic_constant": 0.01,
+    "attachment_rate": 0.0,
+    "detachment_rate": 0.0,
+    "maximum_number_of_attachments": 12,
+    "options": {
+      "set_relative_equilibrium_distance": {
+        "enabled": false,
+        "value": 1.8
+      },
+      "set_absolute_equilibrium_distance": {
+        "enabled": false,
+        "value": 15.12
+      }
+    }
+  },
+  "motility_defaults": {
+    "speed": 1.0,
+    "persistence_time": 1.0,
+    "migration_bias": 0.5,
+    "enabled": false,
+    "use_2D": true,
+    "chemotaxis": {
+      "enabled": false,
+      "substrate": "substrate",
+      "direction": 1
+    },
+    "advanced_chemotaxis": {
+      "enabled": false,
+      "normalize_each_gradient": false,
+      "chemotactic_sensitivities": {
+        "substrate": 0.0
+      }
+    }
+  },
+  "secretion_defaults": {
+    "substrate": {
+      "secretion_rate": 0.0,
+      "secretion_target": 1.0,
+      "uptake_rate": 0.0,
+      "net_export_rate": 0.0
+    }
+  },
+  "cell_interactions_defaults": {
+    "apoptotic_phagocytosis_rate": 0.0,
+    "necrotic_phagocytosis_rate": 0.0,
+    "other_dead_phagocytosis_rate": 0.0,
+    "dead_phagocytosis_rate": 0.0,
+    "live_phagocytosis_rates": {
+      "default": 0.0
+    },
+    "attack_rates": {
+      "default": 0.0
+    },
+    "attack_damage_rate": 1.0,
+    "attack_duration": 0.1,
+    "damage_rate": 1.0,
+    "fusion_rates": {
+      "default": 0.0
+    }
+  },
+  "cell_transformations_defaults": {
+    "transformation_rates": {
+      "default": 0.0
+    }
+  },
+  "cell_integrity_defaults": {
+    "damage_rate": 0.0,
+    "damage_repair_rate": 0.0
+  },
+  "custom_data_defaults": {
+    "sample": {
+      "value": 1.0,
+      "conserved": false,
+      "units": "dimensionless",
+      "description": ""
+    },
+    "somedata": {
+      "value": 1.0,
+      "conserved": false,
+      "units": "dimensionless",
+      "description": ""
+    }
+  },
+  "initial_parameter_distributions_defaults": {
+    "enabled": false,
+    "distributions": [
+      {
+        "enabled": false,
+        "type": "Log10Normal",
+        "check_base": true,
+        "behavior": "Volume",
+        "mu": 4,
+        "sigma": 2,
+        "upper_bound": 100000
+      },
+      {
+        "enabled": false,
+        "type": "LogUniform",
+        "check_base": true,
+        "behavior": "apoptosis",
+        "min": 1e-6,
+        "max": 1e-2
+      }
+    ]
+  },
+  "intracellular_defaults": {
+    "maboss": {
+      "type": "maboss",
+      "bnd_filename": "config/differentiation/boolean_network/tcell_corral.bnd",
+      "cfg_filename": "config/differentiation/boolean_network/tcell_corral.cfg",
+      "settings": {},
+      "mapping": {}
+    }
+  },
+  "cell_type_templates": {
+    "default": {
+      "cycle": "flow_cytometry_separated",
+      "custom_data": {
+        "sample": {
+          "value": 1.0,
+          "conserved": false,
+          "units": "dimensionless",
+          "description": ""
+        }
+      }
+    },
+    "live_cell": {
+      "cycle": "live",
+      "custom_data": {
+        "somedata": {
+          "value": 1.0,
+          "conserved": false,
+          "units": "dimensionless",
+          "description": ""
+        }
+      }
+    },
+    "maboss_cell": {
+      "cycle": "live",
+      "intracellular": "maboss",
+      "custom_data": {
+        "somedata": {
+          "value": 1.0,
+          "conserved": false,
+          "units": "dimensionless",
+          "description": ""
+        }
+      }
+    }
+  },
+  "substrate_defaults": {
+    "oxygen": {
+      "diffusion_coefficient": 100000.0,
+      "decay_rate": 0.1,
+      "initial_condition": 38.0,
+      "dirichlet_boundary_condition": {
+        "enabled": true,
+        "value": 38.0
+      }
+    },
+    "substrate": {
+      "diffusion_coefficient": 100000.0,
+      "decay_rate": 10.0,
+      "initial_condition": 0.0,
+      "dirichlet_boundary_condition": {
+        "enabled": false,
+        "value": 0.0
+      }
+    },
+    "CCL21": {
+      "diffusion_coefficient": 1000.0,
+      "decay_rate": 0.005,
+      "initial_condition": 0.0,
+      "dirichlet_boundary_condition": {
+        "enabled": false,
+        "value": 0.0
+      }
+    },
+    "debris": {
+      "diffusion_coefficient": 1.0,
+      "decay_rate": 0.0,
+      "initial_condition": 0.0,
+      "dirichlet_boundary_condition": {
+        "enabled": false,
+        "value": 0.0
+      }
+    },
+    "inflammatory_factor": {
+      "diffusion_coefficient": 10000.0,
+      "decay_rate": 1.0,
+      "initial_condition": 0.0,
+      "dirichlet_boundary_condition": {
+        "enabled": false,
+        "value": 0.0
+      }
+    }
+  }
+}
