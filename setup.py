@@ -4,35 +4,34 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name="physicell-config",
-    version="1.0.0",
-    author="PhysiCell Configuration Builder Contributors",
-    author_email="your-email@domain.com",
-    description="User-friendly Python package for generating PhysiCell XML configuration files",
+    name="physicell-settings",
+    version="0.1.0",  # Start with a lower version for initial release
+    author="Marco Ruscone",
+    author_email="ym.ruscone94@gmail.com",
+    description="User-friendly Python package for generating PhysiCell_settings.xml configuration files",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/your-username/physicell-config",
+    url="https://github.com/mruscone/PhysiCell_Settings",
     project_urls={
-        "Bug Tracker": "https://github.com/your-username/physicell-config/issues",
-        "Documentation": "https://github.com/your-username/physicell-config#readme",
-        "Source Code": "https://github.com/your-username/physicell-config",
+        "Bug Tracker": "https://github.com/mruscone/PhysiCell_Settings/issues",
+        "Documentation": "https://github.com/mruscone/PhysiCell_Settings#readme",
+        "Source Code": "https://github.com/mruscone/PhysiCell_Settings",
     },
     packages=find_packages(),
     classifiers=[
-        "Development Status :: 5 - Production/Stable",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Science/Research",
         "Topic :: Scientific/Engineering :: Bio-Informatics",
-        "Topic :: Scientific/Engineering :: Medical Science Apps.",
-        "License :: OSI Approved :: MIT License",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
         "Operating System :: OS Independent",
     ],
-    python_requires=">=3.7",
+    python_requires=">=3.8",
     install_requires=[
         # No external dependencies - uses only Python standard library
     ],

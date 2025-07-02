@@ -6,21 +6,21 @@ Provides a simple API to set up all simulation parameters including domain, subs
 cell definitions, and advanced features like PhysiBoSS and parameter distributions.
 """
 
-from .config_builder import PhysiCellConfig
+__version__ = "0.1.0"
+__author__ = "Marco Ruscone"
+__email__ = "m.ruscone94@gmail.com"
 
-__version__ = "1.0.0"
-__author__ = "PhysiCell Configuration Builder Contributors"
-__email__ = "your-email@domain.com"
+from .config_builder_modular import PhysiCellConfig
 __license__ = "MIT"
-__url__ = "https://github.com/your-username/physicell-config"
+__url__ = "https://github.com/mruscone/PhysiCell_Settings"
 
 __all__ = ["PhysiCellConfig"]
 
 # Package metadata
-__title__ = "physicell-config"
+__title__ = "physicell-settings"
 __description__ = "User-friendly Python package for generating PhysiCell XML configuration files"
 __long_description__ = __doc__
 
 # Version information
-VERSION = (1, 0, 0)
+VERSION = (0, 1, 0)
 __version_info__ = VERSION

@@ -28,15 +28,15 @@ from typing import Dict, Any, List, Optional, Tuple
 import os
 
 # Import modules
-from modules.domain import DomainModule
-from modules.substrates import SubstrateModule
-from modules.cell_types import CellTypeModule
-from modules.cell_rules import CellRulesModule
-from modules.cell_rules_csv import CellRulesCSV
-from modules.physiboss import PhysiBoSSModule
-from modules.options import OptionsModule
-from modules.initial_conditions import InitialConditionsModule
-from modules.save_options import SaveOptionsModule
+from .modules.domain import DomainModule
+from .modules.substrates import SubstrateModule
+from .modules.cell_types import CellTypeModule
+from .modules.cell_rules import CellRulesModule
+from .modules.cell_rules_csv import CellRulesCSV
+from .modules.physiboss import PhysiBoSSModule
+from .modules.options import OptionsModule
+from .modules.initial_conditions import InitialConditionsModule
+from .modules.save_options import SaveOptionsModule
 
 
 class PhysiCellConfig:

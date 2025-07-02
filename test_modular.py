@@ -6,7 +6,7 @@ This demonstrates how the modular approach maintains the same simple interface
 while organizing code into manageable modules.
 """
 
-from config_builder_modular import PhysiCellConfig
+from physicell_config import PhysiCellConfig
 
 def test_modular_config():
     """Test the modular configuration builder."""
@@ -65,9 +65,11 @@ def test_modular_config():
     print("7. Configuring save options...")
     config.save_options.set_svg_options(
         interval=120.0,
-        plot_substrate=True,
-        substrate_to_plot="oxygen",
-        cell_color_by="cell_type"
+        enable=True
+    )
+    config.save_options.set_svg_plot_substrate(
+        enabled=True,
+        substrate="oxygen"
     )
     
     # Print summary

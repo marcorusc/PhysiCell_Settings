@@ -105,3 +105,8 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# PyPI tokens and sensitive files
+PYPI_TOKENS_BACKUP.txt
+publish_to_pypi.sh
+.pypirc

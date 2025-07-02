@@ -1,15 +1,83 @@
-# PhysiCell Configuration Builder
+# PhysiCell Settings
 
-A powerful, modular Python package for generating PhysiCell XML configuration files with comprehensive parameter coverage, intuitive API design, and maintainable architecture.
+A powerful, modular Python package for generating PhysiCell_settings.xml configuration files with comprehensive parameter coverage, intuitive API design, and maintainable architecture.
 
-[![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![PyPI version](https://img.shields.io/pypi/v/physicell-settings.svg)](https://pypi.org/project/physicell-settings/)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 ## 🚀 Overview
 
-The PhysiCell Configuration Builder provides a powerful yet simple API for creating complex PhysiCell simulations. Built with a modern modular architecture, it handles all aspects of PhysiCell configuration with a focus on ease of use, maintainability, and compatibility with existing PhysiCell standards.
+The PhysiCell Settings package provides a powerful yet simple API for creating complex PhysiCell simulations. Built with a modern modular architecture, it handles all aspects of PhysiCell configuration with a focus on ease of use, maintainability, and compatibility with existing PhysiCell standards.
 
-### ✨ Key Features
+## 📦 Installation
+
+Install from PyPI using pip:
+
+```bash
+pip install physicell-settings
+```
+
+**Requirements:**
+- Python 3.8 or higher
+- No external dependencies (uses only Python standard library)
+
+## 🚀 Quick Start
+
+```python
+import physicell_config
+from physicell_config import PhysiCellConfig
+
+# Create a new configuration
+config = PhysiCellConfig()
+
+# Set up simulation domain
+config.domain.set_domain(x_min=-500, x_max=500, y_min=-500, y_max=500)
+
+# Add substrates
+config.substrates.add_substrate(
+    name="oxygen", 
+    diffusion_coefficient=100000.0,
+    decay_rate=0.1
+)
+
+# Add cell type
+config.cell_types.add_cell_type(
+    name="cancer_cell",
+    cycle_model="Ki67_basic"
+)
+
+# Save configuration
+config.save("PhysiCell_settings.xml")
+```
+
+## 🚧 Development Status
+
+**Current Version:** 0.1.0 (Beta)
+
+This package is currently in active development. While it's functional and available on PyPI, some features are still being refined and additional functionality is being added.
+
+### ✅ **What's Working:**
+- Core configuration generation
+- All major PhysiCell modules (domain, substrates, cell types, etc.)
+- PyPI installation and basic usage
+- Modular architecture
+
+### 🔄 **In Progress:**
+- Additional validation and error handling
+- Enhanced documentation and examples
+- Extended API coverage for advanced features
+- Performance optimizations
+
+### 📋 **Planned Features:**
+- Advanced parameter validation
+- Configuration templates
+- Migration tools from legacy formats
+- Enhanced PhysiBoSS integration
+
+**Note:** The repository is currently private as we finalize features and documentation. The package is stable for basic use cases.
+
+## ✨ Key Features
 
 - **🏗️ Modular Architecture** - Well-organized, maintainable codebase with focused modules
 - **🎯 Simple & Intuitive** - Clean API with sensible defaults and method chaining
@@ -56,37 +124,36 @@ The configuration builder uses a modular composition pattern that provides:
 
 ### Installation
 
-```bash
-# Clone the repository
-git clone https://github.com/marcorusc/PhysiCell_Settings.git
-cd PhysiCell_Settings
+The package is available on PyPI for easy installation:
 
-# Install dependencies (if needed)
-pip install -r requirements.txt
+```bash
+pip install physicell-settings
 ```
 
 ### Basic Usage
 
 ```python
-from config_builder_modular import PhysiCellConfig
+import physicell_config
+from physicell_config import PhysiCellConfig
 
 # Create configuration
 config = PhysiCellConfig()
 
-# Quick setup with convenience method
-config.setup_basic_simulation(
-    x_range=(-400, 400),
-    y_range=(-400, 400),
-    mesh_spacing=20.0,
-    max_time=1440.0  # 24 hours
+# Set up simulation domain
+config.domain.set_domain(x_min=-400, x_max=400, y_min=-400, y_max=400)
+
+# Add substrates
+config.substrates.add_substrate(
+    name="oxygen", 
+    diffusion_coefficient=100000.0,
+    decay_rate=0.1
 )
 
-# Add substrates and cell types
-config.add_simple_substrate("oxygen", diffusion_coeff=100000.0)
-config.add_simple_cell_type("cancer_cell", motile=True)
-
-# Save configuration
-config.save_xml("my_simulation.xml")
+# Add cell type
+config.cell_types.add_cell_type(
+    name="cancer_cell",
+    cycle_model="Ki67_basic"
+)
 ```
 
 ### Advanced Modular Usage
@@ -304,27 +371,19 @@ We welcome contributions! The modular architecture makes it easy to:
 - Improve documentation and examples
 - Add comprehensive test suites
 
-See `CONTRIBUTING.md` for guidelines.
+## 📧 Support & Contact
+
+- **Author:** Marco Ruscone
+- **Email:** ym.ruscone94@gmail.com
+- **PyPI:** https://pypi.org/project/physicell-settings/
+
+For questions, suggestions, or bug reports, please feel free to reach out via email.
 
 ## 📄 License
 
-This project is licensed under the GNU General Public License v3.0 - see the `LICENSE` file for details.
-
-**What this means for you:**
-- ✅ **Free to use** for research, education, and commercial purposes
-- ✅ **Modify and distribute** - but derivative works must also be GPL v3
-- ✅ **Strong attribution** - your contributions are protected and credited
-- ✅ **Patent protection** - includes explicit patent grant
-- 🔒 **Copyleft protection** - prevents proprietary forks that don't give back to the community
-
-**For scientific use:** Please cite this work in publications. For commercial use: derivative works must remain open source.
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
-- PhysiCell development team for the excellent simulation platform
-- Contributors to this configuration builder
-- The computational biology community for feedback and suggestions
-
----
-
-**Note**: This is the modular version of the PhysiCell Configuration Builder, designed for maintainability and extensibility. The architecture supports easy addition of new features and collaborative development.
+- PhysiCell development team for creating the simulation framework
+- The open-source community for inspiration and best practices
