@@ -5,6 +5,70 @@ All notable changes to the PhysiCell Configuration Builder will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.4] - 2025-07-02
+
+### ✨ New Features
+
+#### Added
+- **Automatic Standard User Parameters**
+  - `number_of_cells` parameter is now automatically included in all configurations
+  - Default value: 5 (matching PhysiCell templates)
+  - Type: int, Units: none
+  - Description: "initial number of cells (for each cell type)"
+  - Used by PhysiCell for initial cell placement when no custom cell.csv is provided
+
+#### Enhanced
+- **PhysiCellConfig Class**
+  - Added `set_number_of_cells(count: int)` convenience method
+  - Added `_add_standard_user_parameters()` for automatic parameter initialization
+  - Improved template compatibility with standard PhysiCell projects
+
+### 🔧 API Improvements
+- **Standard Parameter Handling**
+  - All new configurations now include PhysiCell-expected user parameters
+  - Better alignment with PhysiCell template structure
+  - Improved MCP tool compatibility for agent-driven model building
+
+## [0.1.3] - 2025-07-02
+
+### 🐛 Bug Fixes
+
+#### Fixed
+- **Basic Chemotaxis Substrate Requirement** in CellTypeModule
+  - PhysiCell requires a substrate element in basic chemotaxis even when disabled
+  - Now automatically sets the first available substrate as default when no specific chemotaxis is configured
+  - Ensures XML compatibility with PhysiCell simulator requirements
+  - Prevents runtime errors from missing substrate specifications
+
+### 🔧 API Improvements
+- **Enhanced XML Generation**
+  - Basic chemotaxis section always includes substrate element
+  - Automatically uses first available substrate when none specified
+  - Better compliance with PhysiCell XML schema requirements
+
+## [0.1.2] - 2025-07-02
+
+### 🐛 Bug Fixes
+
+#### Fixed
+- **Chemotaxis Substrate Bug** in CellTypeModule
+  - Fixed XML generation to exclude default placeholder 'substrate' value
+  - Only include chemotaxis substrate in XML if it's a real substrate name
+  - Prevents PhysiCell runtime errors from invalid substrate references
+  
+#### Added
+- **New Chemotaxis Methods** in CellTypeModule
+  - Added `set_chemotaxis()` method for simple chemotaxis configuration
+  - Added `set_advanced_chemotaxis()` method for complex chemotaxis setup
+  - Both methods validate substrate names and prevent placeholder issues
+  - Enables proper programmatic chemotaxis configuration
+
+### 🔧 API Improvements
+- **Enhanced XML Generation**
+  - Improved chemotaxis XML generation logic
+  - Better handling of default vs. real substrate names
+  - More robust substrate validation in advanced chemotaxis
+
 ## [0.1.1] - 2025-07-02
 
 ### 🔧 API Improvements

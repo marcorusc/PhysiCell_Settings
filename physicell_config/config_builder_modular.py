@@ -62,8 +62,9 @@ class PhysiCellConfig:
         # Cell rules CSV module (initialized on demand)
         self._cell_rules_csv = None
         
-        # User parameters (kept simple for now)
+        # User parameters (automatically include PhysiCell standard parameters)
         self.user_parameters = {}
+        self._add_standard_user_parameters()
     
     @property
     def cell_rules_csv(self) -> CellRulesCSV:
@@ -83,6 +84,17 @@ class PhysiCellConfig:
         
         return self._cell_rules_csv
     
+    def _add_standard_user_parameters(self) -> None:
+        """Initialize standard user parameters that appear in PhysiCell templates."""
+        # number_of_cells is a standard parameter used for initial cell placement
+        # If users specify their own cell.csv for initial conditions, this should be 0
+        self.user_parameters['number_of_cells'] = {
+            'value': 5,  # Default to 5 cells, common in PhysiCell examples
+            'units': 'none',
+            'description': 'initial number of cells (for each cell type)',
+            'type': 'int'
+        }
+    
     # ===========================================
     # User Parameters (legacy compatibility)
     # ===========================================
@@ -96,6 +108,19 @@ class PhysiCellConfig:
             'description': description,
             'type': parameter_type
         }
+    
+    def set_number_of_cells(self, count: int) -> None:
+        """
+        Set the number of cells for initial placement.
+        
+        Args:
+            count: Number of cells to place initially for each cell type.
+                   Set to 0 if using custom cell.csv file for initial conditions.
+        """
+        if not isinstance(count, int) or count < 0:
+            raise ValueError("number_of_cells must be a non-negative integer")
+        
+        self.user_parameters['number_of_cells']['value'] = count
     
     # ===========================================
     # Convenience methods for common operations

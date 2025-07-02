@@ -588,16 +588,37 @@ class CellTypeModule(BaseModule):
         if 'use_2D' in motility:
             self._create_element(options_elem, "use_2D", str(motility['use_2D']).lower())
         
-        # Chemotaxis
+        # Chemotaxis - Always include this section as PhysiCell requires it
+        chemo_elem = self._create_element(options_elem, "chemotaxis")
         if 'chemotaxis' in motility:
-            chemo_elem = self._create_element(options_elem, "chemotaxis")
             chemo_data = motility['chemotaxis']
             self._create_element(chemo_elem, "enabled", str(chemo_data.get('enabled', False)).lower())
+            
+            # Handle substrate - use specified substrate or first available substrate
+            substrate_name = None
             if 'substrate' in chemo_data and chemo_data['substrate'] != 'substrate':
-                # Only include substrate if it's not the default placeholder value
-                self._create_element(chemo_elem, "substrate", chemo_data['substrate'])
+                substrate_name = chemo_data['substrate']
+            else:
+                # Get first available substrate as default
+                available_substrates = self._config.substrates.get_substrates()
+                if available_substrates:
+                    substrate_name = list(available_substrates.keys())[0]
+            
+            if substrate_name:
+                self._create_element(chemo_elem, "substrate", substrate_name)
+            
             if 'direction' in chemo_data:
                 self._create_element(chemo_elem, "direction", chemo_data['direction'])
+            else:
+                self._create_element(chemo_elem, "direction", "1")  # Default direction
+        else:
+            # No chemotaxis specified - create default disabled chemotaxis with first substrate
+            self._create_element(chemo_elem, "enabled", "false")
+            available_substrates = self._config.substrates.get_substrates()
+            if available_substrates:
+                substrate_name = list(available_substrates.keys())[0]
+                self._create_element(chemo_elem, "substrate", substrate_name)
+            self._create_element(chemo_elem, "direction", "1")
         
         # Advanced chemotaxis
         if 'advanced_chemotaxis' in motility:
