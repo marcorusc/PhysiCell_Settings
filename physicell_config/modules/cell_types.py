@@ -154,6 +154,65 @@ class CellTypeModule(BaseModule):
         if enabled is not None:
             motility['enabled'] = enabled
     
+    def set_chemotaxis(self, cell_type: str, substrate: str, enabled: bool = True, 
+                      direction: int = 1) -> None:
+        """Set chemotaxis parameters for a cell type.
+        
+        Args:
+            cell_type: Name of the cell type
+            substrate: Name of the substrate to follow (must be a real substrate name)
+            enabled: Whether chemotaxis is enabled
+            direction: Direction of chemotaxis (1 for attraction, -1 for repulsion)
+        """
+        if cell_type not in self.cell_types:
+            raise ValueError(f"Cell type '{cell_type}' not found")
+        
+        # Validate substrate name - it should not be the default placeholder
+        if substrate == 'substrate':
+            raise ValueError("Substrate name cannot be the default placeholder 'substrate'. Use a real substrate name.")
+        
+        # Validate direction
+        if direction not in [-1, 1]:
+            raise ValueError("Direction must be 1 (attraction) or -1 (repulsion)")
+        
+        motility = self.cell_types[cell_type]['phenotype']['motility']
+        
+        # Initialize chemotaxis section if it doesn't exist
+        if 'chemotaxis' not in motility:
+            motility['chemotaxis'] = {}
+        
+        motility['chemotaxis']['enabled'] = enabled
+        motility['chemotaxis']['substrate'] = substrate
+        motility['chemotaxis']['direction'] = direction
+    
+    def set_advanced_chemotaxis(self, cell_type: str, substrate_sensitivities: dict, 
+                               enabled: bool = True, normalize_each_gradient: bool = False) -> None:
+        """Set advanced chemotaxis parameters for a cell type.
+        
+        Args:
+            cell_type: Name of the cell type
+            substrate_sensitivities: Dictionary mapping substrate names to sensitivity values
+            enabled: Whether advanced chemotaxis is enabled
+            normalize_each_gradient: Whether to normalize each gradient
+        """
+        if cell_type not in self.cell_types:
+            raise ValueError(f"Cell type '{cell_type}' not found")
+        
+        # Validate substrate names - they should not be the default placeholder
+        for substrate in substrate_sensitivities.keys():
+            if substrate == 'substrate':
+                raise ValueError("Substrate name cannot be the default placeholder 'substrate'. Use real substrate names.")
+        
+        motility = self.cell_types[cell_type]['phenotype']['motility']
+        
+        # Initialize advanced_chemotaxis section if it doesn't exist
+        if 'advanced_chemotaxis' not in motility:
+            motility['advanced_chemotaxis'] = {}
+        
+        motility['advanced_chemotaxis']['enabled'] = enabled
+        motility['advanced_chemotaxis']['normalize_each_gradient'] = normalize_each_gradient
+        motility['advanced_chemotaxis']['chemotactic_sensitivities'] = substrate_sensitivities.copy()
+
     def add_secretion(self, cell_type: str, substrate: str, secretion_rate: float,
                      secretion_target: float = 1.0, uptake_rate: float = 0.0,
                      net_export_rate: float = 0.0) -> None:
@@ -534,7 +593,8 @@ class CellTypeModule(BaseModule):
             chemo_elem = self._create_element(options_elem, "chemotaxis")
             chemo_data = motility['chemotaxis']
             self._create_element(chemo_elem, "enabled", str(chemo_data.get('enabled', False)).lower())
-            if 'substrate' in chemo_data:
+            if 'substrate' in chemo_data and chemo_data['substrate'] != 'substrate':
+                # Only include substrate if it's not the default placeholder value
                 self._create_element(chemo_elem, "substrate", chemo_data['substrate'])
             if 'direction' in chemo_data:
                 self._create_element(chemo_elem, "direction", chemo_data['direction'])
@@ -549,8 +609,10 @@ class CellTypeModule(BaseModule):
             if 'chemotactic_sensitivities' in adv_data:
                 sens_elem = self._create_element(adv_chemo_elem, "chemotactic_sensitivities")
                 for substrate, sensitivity in adv_data['chemotactic_sensitivities'].items():
-                    sens_substrate_elem = self._create_element(sens_elem, "chemotactic_sensitivity", sensitivity)
-                    sens_substrate_elem.set("substrate", substrate)
+                    # Only include sensitivity if substrate is not the default placeholder
+                    if substrate != 'substrate':
+                        sens_substrate_elem = self._create_element(sens_elem, "chemotactic_sensitivity", sensitivity)
+                        sens_substrate_elem.set("substrate", substrate)
     
     def _add_secretion_xml(self, parent: ET.Element, secretion: Dict[str, Any]) -> None:
         """Add secretion XML elements."""
