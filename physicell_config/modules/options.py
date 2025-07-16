@@ -1,6 +1,4 @@
-"""
-Options configuration module for PhysiCell.
-"""
+"""Simulation and numeric options."""
 
 from typing import Dict, Any, List, Optional
 import xml.etree.ElementTree as ET
@@ -8,7 +6,7 @@ from .base import BaseModule
 
 
 class OptionsModule(BaseModule):
-    """Handles options configuration for PhysiCell simulations."""
+    """Configure general simulation options such as time steps."""
     
     def __init__(self, config):
         super().__init__(config)
@@ -27,14 +25,28 @@ class OptionsModule(BaseModule):
         }
     
     def set_max_time(self, max_time: float, units: str = 'min') -> None:
-        """Set maximum simulation time."""
+        """Define the total simulation duration.
+
+        Parameters
+        ----------
+        max_time:
+            Final time value.
+        units:
+            Time units (``'min'`` or ``'hour'``).
+        """
         self._validate_positive_number(max_time, "max_time")
         self.options['max_time'] = max_time
         self.options['time_units'] = units
     
     def set_time_steps(self, dt_diffusion: float = None, dt_mechanics: float = None,
                       dt_phenotype: float = None) -> None:
-        """Set simulation time steps."""
+        """Specify numerical integration time steps.
+
+        Parameters
+        ----------
+        dt_diffusion, dt_mechanics, dt_phenotype:
+            Optional overrides for the default time steps.
+        """
         if dt_diffusion is not None:
             self._validate_positive_number(dt_diffusion, "dt_diffusion")
             self.options['dt_diffusion'] = dt_diffusion
@@ -48,23 +60,29 @@ class OptionsModule(BaseModule):
             self.options['dt_phenotype'] = dt_phenotype
     
     def set_virtual_wall(self, enabled: bool) -> None:
-        """Set virtual wall at domain edge."""
+        """Enable or disable the domain boundary wall.
+
+        Parameters
+        ----------
+        enabled:
+            ``True`` to prevent cells leaving the domain.
+        """
         self.options['virtual_wall_at_domain_edge'] = enabled
     
     def set_automated_spring_adhesions(self, disabled: bool) -> None:
-        """Set automated spring adhesions."""
+        """Toggle automated spring adhesion feature."""
         self.options['disable_automated_spring_adhesions'] = disabled
     
     def set_random_seed(self, seed: int) -> None:
-        """Set random seed."""
+        """Specify the random number generator seed."""
         self.options['random_seed'] = seed
     
     def set_legacy_random_points(self, enabled: bool) -> None:
-        """Set legacy random points on sphere in divide."""
+        """Use legacy division positioning algorithm."""
         self.options['legacy_random_points_on_sphere_in_divide'] = enabled
     
     def set_parallel_threads(self, num_threads: int) -> None:
-        """Set number of OpenMP threads."""
+        """Set number of OpenMP threads used by the simulation."""
         if num_threads < 1:
             raise ValueError("Number of threads must be at least 1")
         self.options['omp_num_threads'] = num_threads

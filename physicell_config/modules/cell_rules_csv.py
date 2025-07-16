@@ -15,10 +15,17 @@ from .base import BaseModule
 
 
 class CellRulesCSV(BaseModule):
-    """
-    Manages cell rules and generates PhysiCell-compatible CSV files.
-    
-    The CSV format follows: cell_type,signal,direction,behavior,base_value,half_max,hill_power,apply_to_dead
+    """Utility for creating ``cell_rules.csv`` files.
+
+    This helper keeps a registry of valid signals and behaviors loaded from
+    :file:`signals_behaviors.json` located in ``physicell_config/config`` and
+    tracks the available cell types and substrates from the configuration.
+    Rules can be added programmatically and exported in the exact CSV layout
+    required by PhysiCell.
+
+    The CSV format produced is::
+
+        cell_type,signal,direction,behavior,base_value,half_max,hill_power,apply_to_dead
     """
     
     def __init__(self, config_instance=None):
