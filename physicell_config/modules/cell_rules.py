@@ -16,9 +16,21 @@ class CellRulesModule(BaseModule):
         self.rulesets = {}
         self.rules = []
     
-    def add_ruleset(self, name: str, folder: str = "./config", 
+    def add_ruleset(self, name: str, folder: str = "./config",
                    filename: str = "rules.csv", enabled: bool = True) -> None:
-        """Add a ruleset to the configuration."""
+        """Register a CSV ruleset.
+
+        Parameters
+        ----------
+        name:
+            Identifier for the ruleset.
+        folder:
+            Folder where the CSV file resides.
+        filename:
+            Name of the CSV file containing the rules.
+        enabled:
+            Whether the ruleset should be loaded by PhysiCell.
+        """
         self.rulesets[name] = {
             'folder': folder,
             'filename': filename,
@@ -30,7 +42,21 @@ class CellRulesModule(BaseModule):
                 min_behavior: float = 0.0, max_behavior: float = 1.0,
                 hill_power: float = 1.0, half_max: float = 0.5,
                 applies_to_dead: bool = False) -> None:
-        """Add a cell rule."""
+        """Add a single rule to ``cell_rules``.
+
+        Parameters
+        ----------
+        signal, behavior, cell_type:
+            Entities involved in the rule definition.
+        min_signal, max_signal:
+            Signal range that triggers the behaviour.
+        min_behavior, max_behavior:
+            Bounds for the resulting behaviour value.
+        hill_power, half_max:
+            Parameters of the Hill function controlling the response.
+        applies_to_dead:
+            Set to ``True`` if the rule should be evaluated for dead cells.
+        """
         rule = {
             'signal': signal,
             'behavior': behavior,
@@ -46,7 +72,13 @@ class CellRulesModule(BaseModule):
         self.rules.append(rule)
     
     def load_rules_from_csv(self, filename: str) -> None:
-        """Load rules from a CSV file."""
+        """Read rule definitions from an external CSV file.
+
+        Parameters
+        ----------
+        filename:
+            Path to the CSV file produced by tools such as :class:`CellRulesCSV`.
+        """
         try:
             with open(filename, 'r', newline='') as csvfile:
                 reader = csv.DictReader(csvfile)
@@ -71,7 +103,13 @@ class CellRulesModule(BaseModule):
             raise ValueError(f"Error loading rules from '{filename}': {str(e)}")
     
     def save_rules_to_csv(self, filename: str) -> None:
-        """Save rules to a CSV file."""
+        """Write all currently stored rules to a CSV file.
+
+        Parameters
+        ----------
+        filename:
+            Destination path for the generated CSV.
+        """
         if not self.rules:
             raise ValueError("No rules to save")
         
@@ -88,7 +126,13 @@ class CellRulesModule(BaseModule):
             raise ValueError(f"Error saving rules to '{filename}': {str(e)}")
     
     def add_to_xml(self, parent: ET.Element) -> None:
-        """Add cell rules configuration to XML."""
+        """Serialize cell rules into the PhysiCell XML tree.
+
+        Parameters
+        ----------
+        parent:
+            Parent XML element representing ``microenvironment_setup``.
+        """
         # Always add cell_rules section, even if empty or disabled
         cell_rules_elem = self._create_element(parent, "cell_rules")
         
@@ -123,17 +167,17 @@ class CellRulesModule(BaseModule):
         self._create_element(cell_rules_elem, "settings")
     
     def get_rules(self) -> List[Dict[str, Any]]:
-        """Get all rules."""
+        """Return a copy of all stored rule dictionaries."""
         return self.rules.copy()
     
     def get_rulesets(self) -> Dict[str, Dict[str, Any]]:
-        """Get all rulesets."""
+        """Return a copy of the registered rulesets."""
         return self.rulesets.copy()
     
     def clear_rules(self) -> None:
-        """Clear all rules."""
+        """Remove every rule from the internal list."""
         self.rules.clear()
     
     def clear_rulesets(self) -> None:
-        """Clear all rulesets."""
+        """Remove all registered rulesets."""
         self.rulesets.clear()

@@ -1,6 +1,4 @@
-"""
-PhysiBoSS configuration module for PhysiCell.
-"""
+"""Intracellular boolean network support via PhysiBoSS."""
 
 from typing import Dict, Any, List, Optional
 import xml.etree.ElementTree as ET
@@ -8,7 +6,7 @@ from .base import BaseModule
 
 
 class PhysiBoSSModule(BaseModule):
-    """Handles PhysiBoSS configuration for PhysiCell simulations."""
+    """Configure PhysiBoSS integration and export settings."""
     
     def __init__(self, config):
         super().__init__(config)
@@ -19,7 +17,19 @@ class PhysiBoSSModule(BaseModule):
                         initial_values: Optional[Dict[str, bool]] = None,
                         mutations: Optional[Dict[str, Dict[str, bool]]] = None,
                         parameters: Optional[Dict[str, float]] = None) -> None:
-        """Enable PhysiBoSS with configuration."""
+        """Enable PhysiBoSS with the given boolean network model.
+
+        Parameters
+        ----------
+        model_file:
+            Path to the `.bnd` file defining the network.
+        initial_values:
+            Mapping of node names to their initial boolean state.
+        mutations:
+            Dict of cell-line specific mutations.
+        parameters:
+            Additional simulation parameters.
+        """
         self.enabled = True
         self.physiboss_settings = {
             'model_file': model_file,
@@ -32,27 +42,27 @@ class PhysiBoSSModule(BaseModule):
         }
     
     def set_time_step(self, time_step: float) -> None:
-        """Set PhysiBoSS time step."""
+        """Set the internal Boolean network time step in minutes."""
         if not self.enabled:
             raise ValueError("PhysiBoSS must be enabled first")
         self._validate_positive_number(time_step, "time_step")
         self.physiboss_settings['time_step'] = time_step
     
     def set_scaling(self, scaling: float) -> None:
-        """Set PhysiBoSS scaling factor."""
+        """Scale the boolean network execution speed."""
         if not self.enabled:
             raise ValueError("PhysiBoSS must be enabled first")
         self._validate_positive_number(scaling, "scaling")
         self.physiboss_settings['scaling'] = scaling
     
     def add_initial_value(self, node: str, value: bool) -> None:
-        """Add initial value for a boolean node."""
+        """Assign an initial boolean value to ``node``."""
         if not self.enabled:
             raise ValueError("PhysiBoSS must be enabled first")
         self.physiboss_settings['initial_values'][node] = value
     
     def add_mutation(self, cell_line: str, node: str, value: bool) -> None:
-        """Add mutation for a cell line."""
+        """Force ``node`` to ``value`` for a specific cell line."""
         if not self.enabled:
             raise ValueError("PhysiBoSS must be enabled first")
         if cell_line not in self.physiboss_settings['mutations']:
@@ -60,7 +70,7 @@ class PhysiBoSSModule(BaseModule):
         self.physiboss_settings['mutations'][cell_line][node] = value
     
     def add_parameter(self, name: str, value: float) -> None:
-        """Add parameter."""
+        """Set an additional PhysiBoSS parameter."""
         if not self.enabled:
             raise ValueError("PhysiBoSS must be enabled first")
         self.physiboss_settings['parameters'][name] = value

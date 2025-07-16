@@ -1,5 +1,8 @@
-"""
-Configuration loader for PhysiCell default parameters.
+"""Utility for loading default parameters from JSON files.
+
+``ConfigLoader`` centralises access to the JSON templates shipped with the
+package.  Each method returns a dictionary suitable for direct insertion into
+the configuration modules so that defaults can be reused or extended.
 """
 
 import json
@@ -9,7 +12,11 @@ from pathlib import Path
 
 
 class ConfigLoader:
-    """Loads and manages default PhysiCell configuration parameters."""
+    """Loader for default PhysiCell configuration snippets.
+
+    The loader reads ``default_parameters.json`` at first use and provides
+    convenience methods to retrieve common phenotype or substrate templates.
+    """
     
     def __init__(self):
         self._config = None

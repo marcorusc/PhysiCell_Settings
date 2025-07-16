@@ -1,6 +1,4 @@
-"""
-Save options configuration module for PhysiCell.
-"""
+"""Output file and visualization settings."""
 
 from typing import Dict, Any, List, Optional
 import xml.etree.ElementTree as ET
@@ -8,7 +6,7 @@ from .base import BaseModule
 
 
 class SaveOptionsModule(BaseModule):
-    """Handles save options configuration for PhysiCell simulations."""
+    """Configure data output intervals and formats."""
     
     def __init__(self, config):
         super().__init__(config)
@@ -70,7 +68,21 @@ class SaveOptionsModule(BaseModule):
     def set_svg_plot_substrate(self, enabled: bool = False, limits: bool = False,
                               substrate: str = 'substrate', colormap: str = 'YlOrRd',
                               min_conc: float = 0, max_conc: float = 1) -> None:
-        """Set SVG substrate plotting options."""
+        """Configure plotting of a substrate concentration in SVG outputs.
+
+        Parameters
+        ----------
+        enabled:
+            Turn substrate plots on or off.
+        limits:
+            Whether min/max concentration limits are enforced.
+        substrate:
+            Name of the substrate to visualise.
+        colormap:
+            Matplotlib-style colormap name.
+        min_conc, max_conc:
+            Colour scale bounds.
+        """
         self.save_options['SVG']['plot_substrate'] = {
             'enabled': enabled,
             'limits': limits,
@@ -82,7 +94,7 @@ class SaveOptionsModule(BaseModule):
     
     def set_svg_legend(self, enabled: bool = False, cell_phase: bool = False,
                       cell_type: bool = True) -> None:
-        """Set SVG legend options."""
+        """Control the presence and contents of the SVG legend."""
         self.save_options['SVG']['legend'] = {
             'enabled': enabled,
             'cell_phase': cell_phase,
@@ -90,7 +102,7 @@ class SaveOptionsModule(BaseModule):
         }
     
     def set_legacy_data(self, enable: bool) -> None:
-        """Set legacy data save option."""
+        """Output additional legacy-format data files."""
         self.save_options['legacy_data']['enable'] = enable
     
     def add_to_xml(self, parent: ET.Element) -> None:

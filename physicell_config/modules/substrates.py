@@ -1,6 +1,4 @@
-"""
-Substrate configuration module for PhysiCell.
-"""
+"""Definition of diffusive substrates present in the simulation."""
 
 from typing import Dict, Any, List, Optional, Tuple
 import xml.etree.ElementTree as ET
@@ -8,7 +6,7 @@ from .base import BaseModule
 
 
 class SubstrateModule(BaseModule):
-    """Handles substrate configuration for PhysiCell simulations."""
+    """Add substrates, boundary conditions and related options."""
     
     def __init__(self, config):
         super().__init__(config)
@@ -25,7 +23,23 @@ class SubstrateModule(BaseModule):
                      dirichlet_value: float = 0.0,
                      units: str = "dimensionless",
                      initial_units: str = "mmHg") -> None:
-        """Add a substrate to the configuration."""
+        """Create a new diffusive substrate entry.
+
+        Parameters
+        ----------
+        name:
+            Substrate identifier.
+        diffusion_coefficient:
+            Diffusion constant in :math:`\mu m^2/min`.
+        decay_rate:
+            First-order decay rate ``1/min``.
+        initial_condition:
+            Initial concentration value.
+        dirichlet_enabled, dirichlet_value:
+            Global Dirichlet condition settings.
+        units, initial_units:
+            Units for the concentration fields.
+        """
         self._validate_non_negative_number(diffusion_coefficient, "diffusion_coefficient")
         self._validate_non_negative_number(decay_rate, "decay_rate")
         
@@ -50,9 +64,9 @@ class SubstrateModule(BaseModule):
             }
         }
     
-    def set_dirichlet_boundary(self, substrate_name: str, boundary: str, 
+    def set_dirichlet_boundary(self, substrate_name: str, boundary: str,
                               enabled: bool, value: float = 0.0) -> None:
-        """Set Dirichlet boundary condition for a specific boundary."""
+        """Configure boundary-specific Dirichlet settings."""
         if substrate_name not in self.substrates:
             raise ValueError(f"Substrate '{substrate_name}' not found")
         

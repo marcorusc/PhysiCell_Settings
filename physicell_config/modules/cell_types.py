@@ -1,5 +1,10 @@
-"""
-Cell types configuration module for PhysiCell.
+"""Cell type configuration helpers for PhysiCell.
+
+This module exposes :class:`CellTypeModule` which stores phenotype and custom
+data for each defined cell type.  Helper methods are provided for setting cycle
+models, death rates, motility parameters, secretion, and intracellular models.
+The class ultimately serializes all definitions to XML under the
+``cell_definitions`` section.
 """
 
 from typing import Dict, Any, List, Optional, Tuple
@@ -9,14 +14,27 @@ from .config_loader import config_loader
 
 
 class CellTypeModule(BaseModule):
-    """Handles cell type configuration for PhysiCell simulations."""
+    """Manage multiple cell types and their phenotypes."""
     
     def __init__(self, config):
         super().__init__(config)
         self.cell_types = {}
     
     def add_cell_type(self, name: str, parent_type: str = "default", template: str = "default") -> None:
-        """Add a cell type to the configuration."""
+        """Create a new cell type entry.
+
+        Parameters
+        ----------
+        name:
+            Unique identifier for the cell type.
+        parent_type:
+            Name of the parent type to inherit from, usually ``"default"``.
+        template:
+            Template key from ``cell_type_templates`` defined in
+            :file:`default_parameters.json`. Each entry bundles the cycle model,
+            phenotype defaults and optional intracellular settings used to
+            populate the new cell type.
+        """
         self.cell_types[name] = {
             'name': name,
             'parent_type': parent_type,
@@ -95,7 +113,15 @@ class CellTypeModule(BaseModule):
         return config_loader.get_default_phenotype("default")
     
     def set_cycle_model(self, cell_type: str, model: str) -> None:
-        """Set the cell cycle model for a cell type."""
+        """Assign a predefined cell cycle model to ``cell_type``.
+
+        Parameters
+        ----------
+        cell_type:
+            Name of the cell type to modify.
+        model:
+            One of the models available via :func:`ConfigLoader.get_cycle_model`.
+        """
         if cell_type not in self.cell_types:
             raise ValueError(f"Cell type '{cell_type}' not found")
         
