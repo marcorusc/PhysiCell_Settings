@@ -6,7 +6,7 @@ Provides a simple API to set up all simulation parameters including domain, subs
 cell definitions, and advanced features like PhysiBoSS and parameter distributions.
 """
 
-__version__ = "0.1.3"
+__version__ = "0.1.5"
 __author__ = "Marco Ruscone"
 __email__ = "m.ruscone94@gmail.com"
 
@@ -22,5 +22,5 @@ __description__ = "User-friendly Python package for generating PhysiCell XML con
 __long_description__ = __doc__
 
 # Version information
-VERSION = (0, 1, 3)
+VERSION = (0, 1, 5)
 __version_info__ = VERSION

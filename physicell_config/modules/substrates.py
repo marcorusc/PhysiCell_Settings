@@ -72,9 +72,6 @@ class SubstrateModule(BaseModule):
     
     def add_to_xml(self, parent: ET.Element) -> None:
         """Add substrates configuration to XML."""
-        if not self.substrates:
-            return
-            
         microenv_elem = self._create_element(parent, "microenvironment_setup")
         
         # Variable definitions
@@ -114,12 +111,9 @@ class SubstrateModule(BaseModule):
                 boundary_value_elem = ET.SubElement(dirichlet_opts_elem, "boundary_value")
                 boundary_value_elem.set("ID", boundary_id)
                 boundary_value_elem.set("enabled", "True" if boundary_data['enabled'] else "False")
-                
-                # Only set text value if boundary is enabled
-                if boundary_data['enabled']:
-                    boundary_value_elem.text = str(boundary_data['value'])
+                boundary_value_elem.text = str(boundary_data['value'])
         
-        # Microenvironment options
+        # Microenvironment options (always add these, even if no substrates)
         options_elem = self._create_element(microenv_elem, "options")
         self._create_element(options_elem, "calculate_gradients", "true")
         self._create_element(options_elem, "track_internalized_substrates_in_each_agent", 

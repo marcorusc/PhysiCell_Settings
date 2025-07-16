@@ -65,6 +65,9 @@ class PhysiCellConfig:
         # User parameters (automatically include PhysiCell standard parameters)
         self.user_parameters = {}
         self._add_standard_user_parameters()
+        
+        # Add default substrate if none are present
+        self._ensure_default_substrate()
     
     @property
     def cell_rules_csv(self) -> CellRulesCSV:
@@ -94,6 +97,30 @@ class PhysiCellConfig:
             'description': 'initial number of cells (for each cell type)',
             'type': 'int'
         }
+    
+    def _ensure_default_substrate(self) -> None:
+        """Ensure a default 'substrate' is present if no substrates are explicitly added."""
+        # This will be called after initialization and before XML generation
+        # to ensure there's always at least one substrate for cell secretion/chemotaxis
+        pass
+    
+    def _add_default_substrate_if_needed(self) -> None:
+        """Add default substrate if none are present before XML generation."""
+        if not self.substrates.get_substrates():
+            # Load default substrate parameters from config
+            from .modules.config_loader import config_loader
+            substrate_defaults = config_loader.get_substrate_defaults("substrate")
+            
+            self.substrates.add_substrate(
+                name="substrate",
+                diffusion_coefficient=substrate_defaults.get('diffusion_coefficient', 100000.0),
+                decay_rate=substrate_defaults.get('decay_rate', 10.0),
+                initial_condition=substrate_defaults.get('initial_condition', 0.0),
+                dirichlet_enabled=substrate_defaults.get('dirichlet_boundary_condition', {}).get('enabled', False),
+                dirichlet_value=substrate_defaults.get('dirichlet_boundary_condition', {}).get('value', 0.0),
+                units="dimensionless",
+                initial_units="mmHg"
+            )
     
     # ===========================================
     # User Parameters (legacy compatibility)
@@ -171,6 +198,14 @@ class PhysiCellConfig:
     
     def generate_xml(self) -> str:
         """Generate the complete XML configuration."""
+        # Ensure default substrate exists if no substrates are defined
+        self._add_default_substrate_if_needed()
+        
+        # Update all cell types to reflect current substrate configuration
+        # This must happen after substrate setup
+        for cell_type_name in self.cell_types.cell_types.keys():
+            self.cell_types._update_secretion_for_all_substrates(cell_type_name)
+        
         # Create root element
         root = ET.Element("PhysiCell_settings")
         root.set("version", "devel-version")

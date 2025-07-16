@@ -54,28 +54,40 @@ class CellTypeModule(BaseModule):
             'net_export_rate': 0.0
         }
         
-        # Remove the default 'substrate' entry if real substrates are defined
-        if len(all_substrates) > 0 and 'substrate' in current_secretion:
-            del current_secretion['substrate']
-        
-        # Add missing substrates with default parameters
-        for substrate_name in all_substrates.keys():
-            if substrate_name not in current_secretion:
-                current_secretion[substrate_name] = default_params.copy()
+        # If no substrates are explicitly defined, keep the default 'substrate' entry
+        if len(all_substrates) == 0:
+            # Ensure default 'substrate' exists in secretion
+            if 'substrate' not in current_secretion:
+                current_secretion['substrate'] = default_params.copy()
+        else:
+            # Remove the default 'substrate' entry if real substrates are defined
+            if 'substrate' in current_secretion:
+                del current_secretion['substrate']
+            
+            # Add missing substrates with default parameters
+            for substrate_name in all_substrates.keys():
+                if substrate_name not in current_secretion:
+                    current_secretion[substrate_name] = default_params.copy()
         
         # Also update chemotactic sensitivities
         motility = self.cell_types[cell_type]['phenotype']['motility']
         if 'advanced_chemotaxis' in motility and 'chemotactic_sensitivities' in motility['advanced_chemotaxis']:
             sensitivities = motility['advanced_chemotaxis']['chemotactic_sensitivities']
             
-            # Remove the default 'substrate' entry if real substrates are defined
-            if len(all_substrates) > 0 and 'substrate' in sensitivities:
-                del sensitivities['substrate']
-            
-            # Add missing substrates with default sensitivity
-            for substrate_name in all_substrates.keys():
-                if substrate_name not in sensitivities:
-                    sensitivities[substrate_name] = 0.0
+            # If no substrates are explicitly defined, keep only the default 'substrate' entry
+            if len(all_substrates) == 0:
+                # Clear all and add only 'substrate'
+                sensitivities.clear()
+                sensitivities['substrate'] = 0.0
+            else:
+                # Remove the default 'substrate' entry if real substrates are defined
+                if 'substrate' in sensitivities:
+                    del sensitivities['substrate']
+                
+                # Add missing substrates with default sensitivity
+                for substrate_name in all_substrates.keys():
+                    if substrate_name not in sensitivities:
+                        sensitivities[substrate_name] = 0.0
     
     def _default_phenotype(self) -> Dict[str, Any]:
         """Create default phenotype parameters."""
@@ -87,13 +99,52 @@ class CellTypeModule(BaseModule):
         if cell_type not in self.cell_types:
             raise ValueError(f"Cell type '{cell_type}' not found")
         
-        valid_models = ['live', 'Ki67_basic', 'Ki67_advanced', 'flow_cytometry_cycle_model',
-                       'flow_cytometry_separated_cycle_model', 'cycling_quiescent']
+        # Updated to match the new comprehensive cell cycle models
+        valid_models = ['Ki67_basic', 'Ki67_advanced', 'live', 'cycling_quiescent', 
+                       'flow_cytometry', 'flow_cytometry_separated']
         
         if model not in valid_models:
             raise ValueError(f"Invalid cycle model '{model}'. Valid models: {valid_models}")
         
+        # Get the model configuration from the config loader
+        model_config = config_loader.get_cycle_model(model)
+        
+        # Set the cycle model and apply its configuration
         self.cell_types[cell_type]['phenotype']['cycle']['model'] = model
+        self.cell_types[cell_type]['phenotype']['cycle']['data'] = model_config
+        
+        # Apply model-specific configurations like transition rates
+        if 'transition_rates' in model_config:
+            self.cell_types[cell_type]['phenotype']['cycle']['transition_rates'] = model_config['transition_rates']
+        if 'phases' in model_config:
+            self.cell_types[cell_type]['phenotype']['cycle']['phases'] = model_config['phases']
+    
+    def set_cycle_transition_rate(self, cell_type: str, from_phase: int, to_phase: int, rate: float) -> None:
+        """Set a specific transition rate between cycle phases."""
+        if cell_type not in self.cell_types:
+            raise ValueError(f"Cell type '{cell_type}' not found")
+        
+        self._validate_non_negative_number(rate, "transition rate")
+        
+        # Initialize transition_rates if not present
+        if 'transition_rates' not in self.cell_types[cell_type]['phenotype']['cycle']:
+            self.cell_types[cell_type]['phenotype']['cycle']['transition_rates'] = []
+        
+        # Update or add the transition rate
+        transition_rates = self.cell_types[cell_type]['phenotype']['cycle']['transition_rates']
+        
+        # Find existing transition or add new one
+        for transition in transition_rates:
+            if transition['from'] == from_phase and transition['to'] == to_phase:
+                transition['rate'] = rate
+                return
+        
+        # Add new transition
+        transition_rates.append({
+            'from': from_phase,
+            'to': to_phase, 
+            'rate': rate
+        })
     
     def set_death_rate(self, cell_type: str, death_type: str, rate: float) -> None:
         """Set death rate for a cell type."""
@@ -402,30 +453,62 @@ class CellTypeModule(BaseModule):
             self._add_initial_parameter_distributions_xml(cell_def_elem, cell_type['initial_parameter_distributions'])
     
     def _add_cycle_xml(self, parent: ET.Element, cycle: Dict[str, Any]) -> None:
-        """Add cycle XML elements."""
+        """Add cycle XML elements with comprehensive cell cycle model support."""
         cycle_elem = self._create_element(parent, "cycle")
-        cycle_elem.set("code", cycle.get('code', '5'))
-        cycle_elem.set("name", cycle.get('name', 'live'))
         
-        # Add phase durations if they exist
-        if 'phase_durations' in cycle and cycle['phase_durations']:
+        # Get model name and look up configuration
+        model_name = cycle.get('model', 'live')
+        
+        try:
+            model_config = config_loader.get_cycle_model(model_name)
+            cycle_elem.set("code", model_config.get('code', '5'))
+            cycle_elem.set("name", model_config.get('name', model_name))
+        except ValueError:
+            # Fallback for unknown models
+            cycle_elem.set("code", cycle.get('code', '5'))
+            cycle_elem.set("name", cycle.get('name', model_name))
+            model_config = {}
+        
+        # Add phase transition rates (new comprehensive format)
+        transition_rates = cycle.get('transition_rates', model_config.get('transition_rates', []))
+        if transition_rates:
+            rates_elem = self._create_element(cycle_elem, "phase_transition_rates")
+            rates_elem.set("units", "1/min")
+            
+            for transition in transition_rates:
+                rate_elem = self._create_element(rates_elem, "rate", str(transition['rate']))
+                rate_elem.set("start_index", str(transition['from']))
+                rate_elem.set("end_index", str(transition['to']))
+                
+                # Check if this transition has fixed duration from phase_links
+                phase_links = model_config.get('phase_links', [])
+                fixed_duration = False
+                for link in phase_links:
+                    if link['from'] == transition['from'] and link['to'] == transition['to']:
+                        fixed_duration = link.get('fixed_duration', False)
+                        break
+                
+                rate_elem.set("fixed_duration", str(fixed_duration).lower())
+        
+        # Legacy support for old phase_durations format (deprecated but kept for compatibility)
+        elif 'phase_durations' in cycle and cycle['phase_durations']:
             phase_durations_elem = self._create_element(cycle_elem, "phase_durations")
             phase_durations_elem.set("units", "min")
             
             for phase in cycle['phase_durations']:
-                duration_elem = self._create_element(phase_durations_elem, "duration", phase['duration'])
+                duration_elem = self._create_element(phase_durations_elem, "duration", str(phase['duration']))
                 duration_elem.set("index", str(phase['index']))
                 duration_elem.set("fixed_duration", str(phase['fixed_duration']).lower())
         
-        # Add phase transition rates if they exist
-        if 'phase_transition_rates' in cycle and cycle['phase_transition_rates']:
+        # Legacy support for old phase_transition_rates format
+        elif 'phase_transition_rates' in cycle and cycle['phase_transition_rates']:
             rates_elem = self._create_element(cycle_elem, "phase_transition_rates")
             rates_elem.set("units", "1/min")
-            # For specific cycle models that use rates instead of durations
+            
             if isinstance(cycle['phase_transition_rates'], dict):
                 for rate_key, rate_value in cycle['phase_transition_rates'].items():
                     if isinstance(rate_value, dict) and 'start_index' in rate_value:
-                        rate_elem = self._create_element(rates_elem, "rate", rate_value['rate'])
+                        rate_elem = self._create_element(rates_elem, "rate", str(rate_value['rate']))
                         rate_elem.set("start_index", str(rate_value['start_index']))
                         rate_elem.set("end_index", str(rate_value['end_index']))
                         rate_elem.set("fixed_duration", str(rate_value.get('fixed_duration', False)).lower())
@@ -630,10 +713,9 @@ class CellTypeModule(BaseModule):
             if 'chemotactic_sensitivities' in adv_data:
                 sens_elem = self._create_element(adv_chemo_elem, "chemotactic_sensitivities")
                 for substrate, sensitivity in adv_data['chemotactic_sensitivities'].items():
-                    # Only include sensitivity if substrate is not the default placeholder
-                    if substrate != 'substrate':
-                        sens_substrate_elem = self._create_element(sens_elem, "chemotactic_sensitivity", sensitivity)
-                        sens_substrate_elem.set("substrate", substrate)
+                    # Include all substrates, including the default 'substrate'
+                    sens_substrate_elem = self._create_element(sens_elem, "chemotactic_sensitivity", sensitivity)
+                    sens_substrate_elem.set("substrate", substrate)
     
     def _add_secretion_xml(self, parent: ET.Element, secretion: Dict[str, Any]) -> None:
         """Add secretion XML elements."""
