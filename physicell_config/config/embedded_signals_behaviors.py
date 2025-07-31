@@ -1,3 +1,157 @@
+# --- Automatic Context Extraction from Config ---
+def update_signals_behaviors_context_from_config(config):
+    """
+    Automatically update SIGNALS_BEHAVIORS context from a PhysiCellConfig object.
+    Extracts cell types, substrates, and cell-type-bounded custom variables.
+    """
+    # Extract cell types
+    cell_types = []
+    custom_variables = {}
+    
+    # Try to get cell types from config.cell_types
+    if hasattr(config, 'cell_types'):
+        if hasattr(config.cell_types, 'cell_types'):
+            # Access config.cell_types.cell_types (the actual dict)
+            ct_obj = config.cell_types.cell_types
+            if isinstance(ct_obj, dict):
+                cell_types = list(ct_obj.keys())
+                for ct, ct_data in ct_obj.items():
+                    custom_variables[ct] = []
+        elif isinstance(config.cell_types, dict):
+            cell_types = list(config.cell_types.keys())
+            for ct, ct_obj in config.cell_types.items():
+                # Try to get custom variables for each cell type
+                vars_list = []
+                if hasattr(ct_obj, 'custom_data') and isinstance(ct_obj.custom_data, dict):
+                    vars_list = list(ct_obj.custom_data.keys())
+                custom_variables[ct] = vars_list
+        elif isinstance(config.cell_types, list):
+            cell_types = config.cell_types
+            for ct in cell_types:
+                custom_variables[ct] = []
+    
+    # Extract substrates
+    substrates = []
+    if hasattr(config, 'substrates'):
+        if hasattr(config.substrates, 'substrates'):
+            # Access config.substrates.substrates (the actual dict)
+            subs_obj = config.substrates.substrates
+            if isinstance(subs_obj, dict):
+                substrates = list(subs_obj.keys())
+        elif isinstance(config.substrates, dict):
+            substrates = list(config.substrates.keys())
+        elif isinstance(config.substrates, list):
+            substrates = config.substrates
+    
+    # Update context
+    SIGNALS_BEHAVIORS["context"]["cell_types"] = cell_types
+    SIGNALS_BEHAVIORS["context"]["substrates"] = substrates
+    SIGNALS_BEHAVIORS["context"]["custom_variables"] = custom_variables
+# --- Context Management and Expansion Utilities ---
+def update_signals_behaviors_context(cell_types=None, substrates=None, custom_variables=None):
+    """
+    Update the context in SIGNALS_BEHAVIORS with current cell types, substrates, and custom variables.
+    """
+    if cell_types is not None:
+        SIGNALS_BEHAVIORS["context"]["cell_types"] = cell_types
+    if substrates is not None:
+        SIGNALS_BEHAVIORS["context"]["substrates"] = substrates
+    if custom_variables is not None:
+        SIGNALS_BEHAVIORS["context"]["custom_variables"] = custom_variables
+
+def get_expanded_signals():
+    """
+    Return a list of all signals, expanded using the current context (cell types, substrates, custom variables).
+    """
+    context = SIGNALS_BEHAVIORS["context"]
+    expanded = []
+    for signal in SIGNALS_BEHAVIORS["signals"].values():
+        # Substrate expansion
+        if "substrate_name" in signal["requires"]:
+            for substrate in context["substrates"]:
+                s = signal.copy()
+                # For 'substrate', use substrate name directly
+                if signal["name"] == "substrate":
+                    s["name"] = substrate
+                elif signal["name"] == "intracellular substrate":
+                    s["name"] = f"intracellular {substrate}"
+                elif signal["name"] == "substrate gradient":
+                    s["name"] = f"{substrate} gradient"
+                else:
+                    s["name"] = signal["name"].replace("substrate", substrate)
+                expanded.append(s)
+        # Cell type expansion
+        elif "cell_type" in signal["requires"]:
+            for cell_type in context["cell_types"]:
+                s = signal.copy()
+                # Replace 'cell type' with actual cell type
+                s["name"] = signal["name"].replace("cell type", cell_type)
+                expanded.append(s)
+        # Custom variable expansion
+        elif "custom_variable" in signal["requires"]:
+            for ct, var_list in context["custom_variables"].items():
+                for custom_var in var_list:
+                    s = signal.copy()
+                    s["name"] = f"custom:{custom_var}"
+                    expanded.append(s)
+        else:
+            expanded.append(signal)
+    # Ensure all context-driven signals are present, even if not in templates
+    # Add 'contact with {ct}' for each cell type if not already present
+    contact_template = "contact with {ct}"
+    for ct in context["cell_types"]:
+        expected_name = f"contact with {ct}"
+        if not any(s["name"] == expected_name for s in expanded):
+            s = {
+                "name": expected_name,
+                "type": "contact",
+                "requires": ["cell_type"],
+                "description": f"Contact with {ct}"
+            }
+            expanded.append(s)
+    # Add 'transform to {ct}' for each cell type if not already present
+    for ct in context["cell_types"]:
+        expected_name = f"transform to {ct}"
+        if not any(s["name"] == expected_name for s in expanded):
+            s = {
+                "name": expected_name,
+                "type": "transformation",
+                "requires": ["cell_type"],
+                "description": f"Transform to {ct}"
+            }
+            expanded.append(s)
+    return expanded
+
+def get_expanded_behaviors():
+    """
+    Return a list of all behaviors, expanded using the current context (cell types, substrates, custom variables).
+    """
+    context = SIGNALS_BEHAVIORS["context"]
+    expanded = []
+    for behavior in SIGNALS_BEHAVIORS["behaviors"].values():
+        if "substrate_name" in behavior["requires"]:
+            for substrate in context["substrates"]:
+                b = behavior.copy()
+                # For behaviors, use substrate name directly for 'substrate secretion', and replace in other templates
+                if behavior["name"] == "substrate secretion":
+                    b["name"] = f"{substrate} secretion"
+                else:
+                    b["name"] = behavior["name"].replace("substrate", substrate)
+                expanded.append(b)
+        elif "cell_type" in behavior["requires"]:
+            for cell_type in context["cell_types"]:
+                b = behavior.copy()
+                b["name"] = behavior["name"].replace("cell type", cell_type)
+                expanded.append(b)
+        elif "custom_variable" in behavior["requires"]:
+            for ct, var_list in context["custom_variables"].items():
+                for custom_var in var_list:
+                    b = behavior.copy()
+                    b["name"] = f"custom:{custom_var}"
+                    expanded.append(b)
+        else:
+            expanded.append(behavior)
+    return expanded
 """
 Embedded signals and behaviors definitions for PhysiCell rules generation.
 
@@ -47,6 +201,12 @@ SIGNALS_BEHAVIORS: Dict[str, Any] = {
             "type": "contact",
             "requires": ["cell_type"],
             "description": "Contact with a specific cell type"
+        },
+        "21": {
+            "name": "transform to cell type",
+            "type": "transformation",
+            "requires": ["cell_type"],
+            "description": "Transform to a specific cell type"
         },
         "6": {
             "name": "contact with live cell",
