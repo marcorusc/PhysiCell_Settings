@@ -32,7 +32,7 @@ from physicell_config import PhysiCellConfig
 config = PhysiCellConfig()
 
 # Set up simulation domain
-config.domain.set_domain(x_min=-500, x_max=500, y_min=-500, y_max=500)
+config.domain.set_bounds(x_min=-500, x_max=500, y_min=-500, y_max=500)
 
 # Add substrates
 config.substrates.add_substrate(
@@ -140,7 +140,7 @@ from physicell_config import PhysiCellConfig
 config = PhysiCellConfig()
 
 # Set up simulation domain
-config.domain.set_domain(x_min=-400, x_max=400, y_min=-400, y_max=400)
+config.domain.set_bounds(x_min=-400, x_max=400, y_min=-400, y_max=400)
 
 # Add substrates
 config.substrates.add_substrate(
