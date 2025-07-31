@@ -337,26 +337,7 @@ class PhysiCellConfig:
             issues.append("dt_phenotype must be positive")
         
         return issues
-    
-    # ===========================================
-    # Legacy compatibility methods
-    # ===========================================
-    
-    def set_domain(self, x_min: float, x_max: float, y_min: float, y_max: float,
-                  z_min: float = -10.0, z_max: float = 10.0,
-                  dx: float = 20.0, dy: float = 20.0, dz: float = 20.0) -> None:
-        """Legacy method for setting domain (delegates to domain module)."""
-        self.domain.set_bounds(x_min, x_max, y_min, y_max, z_min, z_max)
-        self.domain.set_mesh(dx, dy, dz)
-    
-    def add_substrate(self, name: str, diffusion_coefficient: float = 1000.0,
-                     decay_rate: float = 0.1, initial_condition: float = 0.0) -> None:
-        """Legacy method for adding substrate (delegates to substrates module)."""
-        self.substrates.add_substrate(name, diffusion_coefficient, decay_rate, initial_condition)
-    
-    def add_cell_type(self, name: str) -> None:
-        """Legacy method for adding cell type (delegates to cell_types module)."""
-        self.cell_types.add_cell_type(name)
+
 
 
     # ===========================================

@@ -31,7 +31,7 @@ class CellTypeModule(BaseModule):
             Name of the parent type to inherit from, usually ``"default"``.
         template:
             Template key from ``cell_type_templates`` defined in
-            :file:`default_parameters.json`. Each entry bundles the cycle model,
+            embedded default parameters. Each entry bundles the cycle model,
             phenotype defaults and optional intracellular settings used to
             populate the new cell type.
         """
@@ -314,117 +314,6 @@ class CellTypeModule(BaseModule):
         for cell_type_name in self.cell_types.keys():
             self._update_secretion_for_all_substrates(cell_type_name)
     
-    def add_intracellular_model(self, cell_type: str, model_type: str = 'maboss', 
-                               bnd_filename: str = '', cfg_filename: str = '') -> None:
-        """Add intracellular model to a cell type."""
-        if cell_type not in self.cell_types:
-            raise ValueError(f"Cell type '{cell_type}' not found")
-        
-        self.cell_types[cell_type]['phenotype']['intracellular'] = {
-            'type': model_type,
-            'bnd_filename': bnd_filename,
-            'cfg_filename': cfg_filename,
-            'settings': {},
-            'mapping': {'inputs': [], 'outputs': []},
-            'initial_values': []
-        }
-    
-    def set_intracellular_settings(self, cell_type: str, intracellular_dt: float = None,
-                                  time_stochasticity: int = None, scaling: float = None,
-                                  start_time: float = None, inheritance_global: bool = None) -> None:
-        """Set intracellular model settings."""
-        if cell_type not in self.cell_types:
-            raise ValueError(f"Cell type '{cell_type}' not found")
-        
-        if 'intracellular' not in self.cell_types[cell_type]['phenotype']:
-            raise ValueError(f"No intracellular model found for cell type '{cell_type}'")
-        
-        settings = self.cell_types[cell_type]['phenotype']['intracellular']['settings']
-        
-        if intracellular_dt is not None:
-            settings['intracellular_dt'] = intracellular_dt
-        if time_stochasticity is not None:
-            settings['time_stochasticity'] = time_stochasticity
-        if scaling is not None:
-            settings['scaling'] = scaling
-        if start_time is not None:
-            settings['start_time'] = start_time
-        if inheritance_global is not None:
-            settings['inheritance'] = {'global': inheritance_global}
-    
-    def add_intracellular_mutation(self, cell_type: str, intracellular_name: str, value: int) -> None:
-        """Add a mutation to the intracellular model."""
-        if cell_type not in self.cell_types:
-            raise ValueError(f"Cell type '{cell_type}' not found")
-        
-        if 'intracellular' not in self.cell_types[cell_type]['phenotype']:
-            raise ValueError(f"No intracellular model found for cell type '{cell_type}'")
-        
-        settings = self.cell_types[cell_type]['phenotype']['intracellular']['settings']
-        if 'mutations' not in settings:
-            settings['mutations'] = []
-        
-        settings['mutations'].append({
-            'intracellular_name': intracellular_name,
-            'value': value
-        })
-    
-    def add_intracellular_initial_value(self, cell_type: str, intracellular_name: str, value: float) -> None:
-        """Add an initial value for the intracellular model."""
-        if cell_type not in self.cell_types:
-            raise ValueError(f"Cell type '{cell_type}' not found")
-        
-        if 'intracellular' not in self.cell_types[cell_type]['phenotype']:
-            raise ValueError(f"No intracellular model found for cell type '{cell_type}'")
-        
-        initial_values = self.cell_types[cell_type]['phenotype']['intracellular']['initial_values']
-        initial_values.append({
-            'intracellular_name': intracellular_name,
-            'value': value
-        })
-    
-    def add_intracellular_input(self, cell_type: str, physicell_name: str, intracellular_name: str,
-                               action: str = 'activation', threshold: float = 1, smoothing: int = 0) -> None:
-        """Add an input mapping for the intracellular model."""
-        if cell_type not in self.cell_types:
-            raise ValueError(f"Cell type '{cell_type}' not found")
-        
-        if 'intracellular' not in self.cell_types[cell_type]['phenotype']:
-            raise ValueError(f"No intracellular model found for cell type '{cell_type}'")
-        
-        inputs = self.cell_types[cell_type]['phenotype']['intracellular']['mapping']['inputs']
-        inputs.append({
-            'physicell_name': physicell_name,
-            'intracellular_name': intracellular_name,
-            'settings': {
-                'action': action,
-                'threshold': threshold,
-                'smoothing': smoothing
-            }
-        })
-    
-    def add_intracellular_output(self, cell_type: str, physicell_name: str, intracellular_name: str,
-                                action: str = 'activation', value: float = 1000000, 
-                                base_value: float = 0, smoothing: int = 0) -> None:
-        """Add an output mapping for the intracellular model."""
-        if cell_type not in self.cell_types:
-            raise ValueError(f"Cell type '{cell_type}' not found")
-        
-        if 'intracellular' not in self.cell_types[cell_type]['phenotype']:
-            raise ValueError(f"No intracellular model found for cell type '{cell_type}'")
-        
-        outputs = self.cell_types[cell_type]['phenotype']['intracellular']['mapping']['outputs']
-        outputs.append({
-            'physicell_name': physicell_name,
-            'intracellular_name': intracellular_name,
-            'settings': {
-                'action': action,
-                'value': value,
-                'base_value': base_value,
-                'smoothing': smoothing
-            }
-        })
-    
     def add_to_xml(self, parent: ET.Element) -> None:
         """Add cell types configuration to XML."""
         if not self.cell_types:
@@ -467,9 +356,9 @@ class CellTypeModule(BaseModule):
             # Integrity
             self._add_cell_integrity_xml(phenotype_elem, cell_type['phenotype']['cell_integrity'])
             
-            # Intracellular (if present)
+            # Intracellular (if present) - handled by PhysiBoSS module
             if 'intracellular' in cell_type['phenotype']:
-                self._add_intracellular_xml(phenotype_elem, cell_type['phenotype']['intracellular'])
+                self._config.physiboss.add_intracellular_xml(phenotype_elem, name)
             
             # Custom data
             if cell_type['custom_data']:
@@ -881,89 +770,10 @@ class CellTypeModule(BaseModule):
             else:
                 self._create_element(custom_data_elem, key, value)
     
-    def _add_intracellular_xml(self, parent: ET.Element, intracellular: Dict[str, Any]) -> None:
-        """Add intracellular model XML elements."""
-        intracellular_elem = self._create_element(parent, "intracellular")
-        intracellular_elem.set("type", intracellular.get('type', 'maboss'))
-        
-        # Add file names
-        if 'bnd_filename' in intracellular:
-            self._create_element(intracellular_elem, "bnd_filename", intracellular['bnd_filename'])
-        if 'cfg_filename' in intracellular:
-            self._create_element(intracellular_elem, "cfg_filename", intracellular['cfg_filename'])
-        
-        # Add initial values
-        if 'initial_values' in intracellular and intracellular['initial_values']:
-            initial_values_elem = self._create_element(intracellular_elem, "initial_values")
-            for init_val in intracellular['initial_values']:
-                init_elem = self._create_element(initial_values_elem, "initial_value", init_val['value'])
-                init_elem.set("intracellular_name", init_val['intracellular_name'])
-        
-        # Add settings
-        if 'settings' in intracellular:
-            settings_elem = self._create_element(intracellular_elem, "settings")
-            settings = intracellular['settings']
-            
-            if 'intracellular_dt' in settings:
-                self._create_element(settings_elem, "intracellular_dt", settings['intracellular_dt'])
-            if 'time_stochasticity' in settings:
-                self._create_element(settings_elem, "time_stochasticity", settings['time_stochasticity'])
-            if 'scaling' in settings:
-                self._create_element(settings_elem, "scaling", settings['scaling'])
-            if 'start_time' in settings:
-                self._create_element(settings_elem, "start_time", settings['start_time'])
-            if 'inheritance' in settings:
-                inheritance_elem = self._create_element(settings_elem, "inheritance")
-                inheritance_elem.set("global", str(settings['inheritance'].get('global', False)))
-            
-            # Add mutations if present
-            if 'mutations' in settings and settings['mutations']:
-                mutations_elem = self._create_element(settings_elem, "mutations")
-                for mutation in settings['mutations']:
-                    mutation_elem = self._create_element(mutations_elem, "mutation", mutation['value'])
-                    mutation_elem.set("intracellular_name", mutation['intracellular_name'])
-        
-        # Add mapping
-        if 'mapping' in intracellular:
-            mapping_elem = self._create_element(intracellular_elem, "mapping")
-            mapping = intracellular['mapping']
-            
-            # Add inputs
-            if 'inputs' in mapping:
-                for input_map in mapping['inputs']:
-                    input_elem = self._create_element(mapping_elem, "input")
-                    input_elem.set("physicell_name", input_map['physicell_name'])
-                    input_elem.set("intracellular_name", input_map['intracellular_name'])
-                    
-                    if 'settings' in input_map:
-                        settings_elem = self._create_element(input_elem, "settings")
-                        inp_settings = input_map['settings']
-                        if 'action' in inp_settings:
-                            self._create_element(settings_elem, "action", inp_settings['action'])
-                        if 'threshold' in inp_settings:
-                            self._create_element(settings_elem, "threshold", inp_settings['threshold'])
-                        if 'smoothing' in inp_settings:
-                            self._create_element(settings_elem, "smoothing", inp_settings['smoothing'])
-            
-            # Add outputs
-            if 'outputs' in mapping:
-                for output_map in mapping['outputs']:
-                    output_elem = self._create_element(mapping_elem, "output")
-                    output_elem.set("physicell_name", output_map['physicell_name'])
-                    output_elem.set("intracellular_name", output_map['intracellular_name'])
-                    
-                    if 'settings' in output_map:
-                        settings_elem = self._create_element(output_elem, "settings")
-                        out_settings = output_map['settings']
-                        if 'action' in out_settings:
-                            self._create_element(settings_elem, "action", out_settings['action'])
-                        if 'value' in out_settings:
-                            self._create_element(settings_elem, "value", out_settings['value'])
-                        if 'base_value' in out_settings:
-                            self._create_element(settings_elem, "base_value", out_settings['base_value'])
-                        if 'smoothing' in out_settings:
-                            self._create_element(settings_elem, "smoothing", out_settings['smoothing'])
-    
     def get_cell_types(self) -> Dict[str, Dict[str, Any]]:
         """Get all cell types."""
         return self.cell_types.copy()
+    
+    def cell_type_exists(self, cell_type: str) -> bool:
+        """Check if a cell type exists."""
+        return cell_type in self.cell_types

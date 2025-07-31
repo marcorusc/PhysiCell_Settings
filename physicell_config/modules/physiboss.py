@@ -1,136 +1,301 @@
 """Intracellular boolean network support via PhysiBoSS."""
 
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Union
 import xml.etree.ElementTree as ET
 from .base import BaseModule
 
 
 class PhysiBoSSModule(BaseModule):
-    """Configure PhysiBoSS integration and export settings."""
+    """Configure PhysiBoSS integration for per-cell-type intracellular models."""
     
     def __init__(self, config):
         super().__init__(config)
-        self.physiboss_settings = {}
         self.enabled = False
     
-    def enable_physiboss(self, model_file: str = "boolean_model.bnd",
-                        initial_values: Optional[Dict[str, bool]] = None,
-                        mutations: Optional[Dict[str, Dict[str, bool]]] = None,
-                        parameters: Optional[Dict[str, float]] = None) -> None:
-        """Enable PhysiBoSS with the given boolean network model.
-
+    # ============================================================================
+    # HELPER METHODS
+    # ============================================================================
+    
+    def _get_cell_type(self, cell_type_name: str) -> Dict[str, Any]:
+        """Get cell type data from the cell types module."""
+        if cell_type_name not in self._config.cell_types.cell_types:
+            raise ValueError(f"Cell type '{cell_type_name}' not found")
+        return self._config.cell_types.cell_types[cell_type_name]
+    
+    # ============================================================================
+    # PER-CELL-TYPE INTRACELLULAR FUNCTIONALITY
+    # ============================================================================
+    
+    def add_intracellular_model(self, cell_type_name: str, model_type: str = 'maboss', 
+                               bnd_filename: str = '', cfg_filename: str = '') -> None:
+        """Add intracellular model to a cell type.
+        
         Parameters
         ----------
-        model_file:
-            Path to the `.bnd` file defining the network.
-        initial_values:
-            Mapping of node names to their initial boolean state.
-        mutations:
-            Dict of cell-line specific mutations.
-        parameters:
-            Additional simulation parameters.
+        cell_type_name : str
+            Name of the cell type
+        model_type : str
+            Type of intracellular model (default: 'maboss')
+        bnd_filename : str
+            Boolean network file name
+        cfg_filename : str
+            Configuration file name
         """
-        self.enabled = True
-        self.physiboss_settings = {
-            'model_file': model_file,
-            'initial_values': initial_values or {},
-            'mutations': mutations or {},
-            'parameters': parameters or {},
-            'time_step': 12.0,
-            'scaling': 10.0,
-            'start_time': 0.0
+        cell_type = self._get_cell_type(cell_type_name)
+        
+        cell_type['phenotype']['intracellular'] = {
+            'type': model_type,
+            'bnd_filename': bnd_filename,
+            'cfg_filename': cfg_filename,
+            'settings': {},
+            'mapping': {'inputs': [], 'outputs': []},
+            'initial_values': []
         }
+        self.enabled = True
     
-    def set_time_step(self, time_step: float) -> None:
-        """Set the internal Boolean network time step in minutes."""
-        if not self.enabled:
-            raise ValueError("PhysiBoSS must be enabled first")
-        self._validate_positive_number(time_step, "time_step")
-        self.physiboss_settings['time_step'] = time_step
+    def set_intracellular_settings(self, cell_type_name: str, intracellular_dt: float = None,
+                                  time_stochasticity: int = None, scaling: float = None,
+                                  start_time: float = None, inheritance_global: bool = None) -> None:
+        """Set intracellular model settings for a cell type.
+        
+        Parameters
+        ----------
+        cell_type_name : str
+            Name of the cell type
+        intracellular_dt : float, optional
+            Intracellular time step
+        time_stochasticity : int, optional
+            Time stochasticity parameter
+        scaling : float, optional
+            Scaling factor
+        start_time : float, optional
+            Start time
+        inheritance_global : bool, optional
+            Global inheritance setting
+        """
+        cell_type = self._get_cell_type(cell_type_name)
+        
+        if 'intracellular' not in cell_type['phenotype']:
+            raise ValueError(f"No intracellular model configured for cell type '{cell_type_name}'")
+        
+        settings = cell_type['phenotype']['intracellular']['settings']
+        
+        if intracellular_dt is not None:
+            settings['intracellular_dt'] = intracellular_dt
+        if time_stochasticity is not None:
+            settings['time_stochasticity'] = time_stochasticity
+        if scaling is not None:
+            settings['scaling'] = scaling
+        if start_time is not None:
+            settings['start_time'] = start_time
+        if inheritance_global is not None:
+            settings['inheritance'] = {'global': inheritance_global}
     
-    def set_scaling(self, scaling: float) -> None:
-        """Scale the boolean network execution speed."""
-        if not self.enabled:
-            raise ValueError("PhysiBoSS must be enabled first")
-        self._validate_positive_number(scaling, "scaling")
-        self.physiboss_settings['scaling'] = scaling
+    def add_intracellular_input(self, cell_type_name: str, physicell_name: str, intracellular_name: str,
+                               action: str = 'activation', threshold: float = 1, smoothing: int = 0) -> None:
+        """Add an input mapping for the intracellular model.
+        
+        Parameters
+        ----------
+        cell_type_name : str
+            Name of the cell type
+        physicell_name : str
+            PhysiCell variable name
+        intracellular_name : str
+            Intracellular variable name
+        action : str
+            Action type (default: 'activation')
+        threshold : float
+            Threshold value (default: 1)
+        smoothing : int
+            Smoothing parameter (default: 0)
+        """
+        cell_type = self._get_cell_type(cell_type_name)
+        
+        if 'intracellular' not in cell_type['phenotype']:
+            raise ValueError(f"No intracellular model configured for cell type '{cell_type_name}'")
+        
+        inputs = cell_type['phenotype']['intracellular']['mapping']['inputs']
+        inputs.append({
+            'physicell_name': physicell_name,
+            'intracellular_name': intracellular_name,
+            'settings': {
+                'action': action,
+                'threshold': threshold,
+                'smoothing': smoothing
+            }
+        })
     
-    def add_initial_value(self, node: str, value: bool) -> None:
-        """Assign an initial boolean value to ``node``."""
-        if not self.enabled:
-            raise ValueError("PhysiBoSS must be enabled first")
-        self.physiboss_settings['initial_values'][node] = value
+    def add_intracellular_output(self, cell_type_name: str, physicell_name: str, intracellular_name: str,
+                                action: str = 'activation', value: float = 1000000, 
+                                base_value: float = 0, smoothing: int = 0) -> None:
+        """Add an output mapping for the intracellular model.
+        
+        Parameters
+        ----------
+        cell_type_name : str
+            Name of the cell type
+        physicell_name : str
+            PhysiCell variable name
+        intracellular_name : str
+            Intracellular variable name
+        action : str
+            Action type (default: 'activation')
+        value : float
+            Output value (default: 1000000)
+        base_value : float
+            Base value (default: 0)
+        smoothing : int
+            Smoothing parameter (default: 0)
+        """
+        cell_type = self._get_cell_type(cell_type_name)
+        
+        if 'intracellular' not in cell_type['phenotype']:
+            raise ValueError(f"No intracellular model configured for cell type '{cell_type_name}'")
+        
+        outputs = cell_type['phenotype']['intracellular']['mapping']['outputs']
+        outputs.append({
+            'physicell_name': physicell_name,
+            'intracellular_name': intracellular_name,
+            'settings': {
+                'action': action,
+                'value': value,
+                'base_value': base_value,
+                'smoothing': smoothing
+            }
+        })
     
-    def add_mutation(self, cell_line: str, node: str, value: bool) -> None:
-        """Force ``node`` to ``value`` for a specific cell line."""
-        if not self.enabled:
-            raise ValueError("PhysiBoSS must be enabled first")
-        if cell_line not in self.physiboss_settings['mutations']:
-            self.physiboss_settings['mutations'][cell_line] = {}
-        self.physiboss_settings['mutations'][cell_line][node] = value
+    def add_intracellular_mutation(self, cell_type_name: str, intracellular_name: str, value: Union[str, bool]) -> None:
+        """Add an intracellular mutation for a cell type.
+        
+        Parameters
+        ----------
+        cell_type_name : str
+            Name of the cell type
+        intracellular_name : str 
+            Name of the intracellular variable
+        value : Union[str, bool]
+            Value for the mutation
+        """
+        cell_type = self._get_cell_type(cell_type_name)
+        
+        if 'intracellular' not in cell_type['phenotype']:
+            raise ValueError(f"No intracellular model configured for cell type '{cell_type_name}'")
+        
+        # Initialize mutations if not present
+        if 'settings' not in cell_type['phenotype']['intracellular']:
+            cell_type['phenotype']['intracellular']['settings'] = {}
+        if 'mutations' not in cell_type['phenotype']['intracellular']['settings']:
+            cell_type['phenotype']['intracellular']['settings']['mutations'] = []
+        
+        # Add mutation
+        mutation = {
+            'intracellular_name': intracellular_name,
+            'value': str(value).lower() if isinstance(value, bool) else str(value)
+        }
+        cell_type['phenotype']['intracellular']['settings']['mutations'].append(mutation)
+
+    # ============================================================================
+    # XML GENERATION
+    # ============================================================================
     
-    def add_parameter(self, name: str, value: float) -> None:
-        """Set an additional PhysiBoSS parameter."""
-        if not self.enabled:
-            raise ValueError("PhysiBoSS must be enabled first")
-        self.physiboss_settings['parameters'][name] = value
-    
-    def add_to_xml(self, parent: ET.Element) -> None:
-        """Add PhysiBoSS configuration to XML."""
-        if not self.enabled:
-            return
+    def add_intracellular_xml(self, parent_elem, cell_type_name: str) -> None:
+        """Add intracellular model XML elements for a specific cell type.
         
-        physiboss_elem = self._create_element(parent, "physiboss")
-        physiboss_elem.set("enabled", "true")
+        Parameters
+        ----------
+        parent_elem : ET.Element
+            Parent XML element (typically phenotype)
+        cell_type_name : str
+            Name of the cell type
+        """
+        cell_type = self._get_cell_type(cell_type_name)
         
-        # Settings
-        settings_elem = self._create_element(physiboss_elem, "physiboss_settings")
+        if 'intracellular' not in cell_type['phenotype']:
+            return  # No intracellular model for this cell type
         
-        self._create_element(settings_elem, "physiboss_bnd_file", 
-                          self.physiboss_settings['model_file'])
+        intracellular = cell_type['phenotype']['intracellular']
+        intracellular_elem = self._create_element(parent_elem, "intracellular")
+        intracellular_elem.set("type", intracellular.get('type', 'maboss'))
         
-        time_step_elem = self._create_element(settings_elem, "physiboss_time_step", 
-                                            self.physiboss_settings['time_step'])
-        time_step_elem.set("units", "min")
+        # Add file names
+        if 'bnd_filename' in intracellular:
+            self._create_element(intracellular_elem, "bnd_filename", intracellular['bnd_filename'])
+        if 'cfg_filename' in intracellular:
+            self._create_element(intracellular_elem, "cfg_filename", intracellular['cfg_filename'])
         
-        scaling_elem = self._create_element(settings_elem, "physiboss_scaling", 
-                                          self.physiboss_settings['scaling'])
+        # Add initial values
+        if 'initial_values' in intracellular and intracellular['initial_values']:
+            initial_values_elem = self._create_element(intracellular_elem, "initial_values")
+            for init_val in intracellular['initial_values']:
+                init_elem = self._create_element(initial_values_elem, "initial_value", init_val['value'])
+                init_elem.set("intracellular_name", init_val['intracellular_name'])
         
-        start_time_elem = self._create_element(settings_elem, "physiboss_start_time",
-                                             self.physiboss_settings['start_time'])
-        start_time_elem.set("units", "min")
+        # Add settings
+        if 'settings' in intracellular:
+            settings_elem = self._create_element(intracellular_elem, "settings")
+            settings = intracellular['settings']
+            
+            if 'intracellular_dt' in settings:
+                self._create_element(settings_elem, "intracellular_dt", settings['intracellular_dt'])
+            if 'time_stochasticity' in settings:
+                self._create_element(settings_elem, "time_stochasticity", settings['time_stochasticity'])
+            if 'scaling' in settings:
+                self._create_element(settings_elem, "scaling", settings['scaling'])
+            if 'start_time' in settings:
+                self._create_element(settings_elem, "start_time", settings['start_time'])
+            if 'inheritance' in settings:
+                inheritance_elem = self._create_element(settings_elem, "inheritance")
+                inheritance_elem.set("global", str(settings['inheritance'].get('global', False)))
+            
+            # Add mutations if present
+            if 'mutations' in settings and settings['mutations']:
+                mutations_elem = self._create_element(settings_elem, "mutations")
+                for mutation in settings['mutations']:
+                    mutation_elem = self._create_element(mutations_elem, "mutation", mutation['value'])
+                    mutation_elem.set("intracellular_name", mutation['intracellular_name'])
         
-        # Initial values
-        if self.physiboss_settings['initial_values']:
-            initial_elem = self._create_element(physiboss_elem, "physiboss_initial_values")
-            for node, value in self.physiboss_settings['initial_values'].items():
-                node_elem = self._create_element(initial_elem, "physiboss_initial_value")
-                node_elem.set("node", node)
-                node_elem.text = str(value).lower()
-        
-        # Mutations
-        if self.physiboss_settings['mutations']:
-            mutations_elem = self._create_element(physiboss_elem, "physiboss_mutations")
-            for cell_line, mutations in self.physiboss_settings['mutations'].items():
-                cell_elem = self._create_element(mutations_elem, "physiboss_mutation")
-                cell_elem.set("cell_line", cell_line)
-                for node, value in mutations.items():
-                    node_elem = self._create_element(cell_elem, "physiboss_mutation_value")
-                    node_elem.set("node", node)
-                    node_elem.text = str(value).lower()
-        
-        # Parameters
-        if self.physiboss_settings['parameters']:
-            params_elem = self._create_element(physiboss_elem, "physiboss_parameters")
-            for name, value in self.physiboss_settings['parameters'].items():
-                param_elem = self._create_element(params_elem, "physiboss_parameter")
-                param_elem.set("name", name)
-                param_elem.text = str(value)
-    
+        # Add mapping
+        if 'mapping' in intracellular:
+            mapping_elem = self._create_element(intracellular_elem, "mapping")
+            mapping = intracellular['mapping']
+            
+            # Add inputs
+            if 'inputs' in mapping:
+                for input_map in mapping['inputs']:
+                    input_elem = self._create_element(mapping_elem, "input")
+                    input_elem.set("physicell_name", input_map['physicell_name'])
+                    input_elem.set("intracellular_name", input_map['intracellular_name'])
+                    
+                    if 'settings' in input_map:
+                        settings_elem = self._create_element(input_elem, "settings")
+                        inp_settings = input_map['settings']
+                        if 'action' in inp_settings:
+                            self._create_element(settings_elem, "action", inp_settings['action'])
+                        if 'threshold' in inp_settings:
+                            self._create_element(settings_elem, "threshold", inp_settings['threshold'])
+                        if 'smoothing' in inp_settings:
+                            self._create_element(settings_elem, "smoothing", inp_settings['smoothing'])
+            
+            # Add outputs
+            if 'outputs' in mapping:
+                for output_map in mapping['outputs']:
+                    output_elem = self._create_element(mapping_elem, "output")
+                    output_elem.set("physicell_name", output_map['physicell_name'])
+                    output_elem.set("intracellular_name", output_map['intracellular_name'])
+                    
+                    if 'settings' in output_map:
+                        settings_elem = self._create_element(output_elem, "settings")
+                        out_settings = output_map['settings']
+                        if 'action' in out_settings:
+                            self._create_element(settings_elem, "action", out_settings['action'])
+                        if 'value' in out_settings:
+                            self._create_element(settings_elem, "value", out_settings['value'])
+                        if 'base_value' in out_settings:
+                            self._create_element(settings_elem, "base_value", out_settings['base_value'])
+                        if 'smoothing' in out_settings:
+                            self._create_element(settings_elem, "smoothing", out_settings['smoothing'])
+
     def is_enabled(self) -> bool:
         """Check if PhysiBoSS is enabled."""
-        return self.enabled
-    
-    def get_settings(self) -> Dict[str, Any]:
-        """Get PhysiBoSS settings."""
-        return self.physiboss_settings.copy() if self.enabled else {}
+        return self.enabled 
