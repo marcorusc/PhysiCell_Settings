@@ -2,26 +2,28 @@
 Cell Rules CSV Generation Module
 
 This module provides functionality to create PhysiCell-compatible cell rules CSV files.
-It maintains a JSON registry of all available signals and behaviors, dynamically updates
-context based on the current configuration, and generates CSV files in the exact format
-expected by PhysiCell.
+It maintains an embedded registry of all available signals and behaviors, dynamically 
+updates context based on the current configuration, and generates CSV files in the exact 
+format expected by PhysiCell.
+
+Updated to use embedded data instead of JSON files to resolve file system
+access issues in containerized environments like MCP agents.
 """
 
-import json
-import os
 import csv
+import os
 from typing import Dict, List, Any, Optional, Union
 from .base import BaseModule
+from ..config.embedded_signals_behaviors import get_signals_behaviors
 
 
 class CellRulesCSV(BaseModule):
     """Utility for creating ``cell_rules.csv`` files.
 
     This helper keeps a registry of valid signals and behaviors loaded from
-    :file:`signals_behaviors.json` located in ``physicell_config/config`` and
-    tracks the available cell types and substrates from the configuration.
-    Rules can be added programmatically and exported in the exact CSV layout
-    required by PhysiCell.
+    embedded data and tracks the available cell types and substrates from the 
+    configuration. Rules can be added programmatically and exported in the exact 
+    CSV layout required by PhysiCell.
 
     The CSV format produced is::
 
@@ -44,20 +46,11 @@ class CellRulesCSV(BaseModule):
             self.update_context_from_config(config_instance)
     
     def _load_signals_behaviors(self) -> Dict[str, Any]:
-        """Load the signals and behaviors configuration from JSON file."""
-        json_path = os.path.join(
-            os.path.dirname(os.path.dirname(__file__)), 
-            'config', 
-            'signals_behaviors.json'
-        )
-        
+        """Load the signals and behaviors configuration from embedded data."""
         try:
-            with open(json_path, 'r') as f:
-                return json.load(f)
-        except FileNotFoundError:
-            raise FileNotFoundError(f"signals_behaviors.json not found at {json_path}")
-        except json.JSONDecodeError as e:
-            raise ValueError(f"Invalid JSON in signals_behaviors.json: {e}")
+            return get_signals_behaviors()
+        except Exception as e:
+            raise ValueError(f"Failed to load embedded signals and behaviors data: {e}")
     
     def update_context_from_config(self, config) -> None:
         """

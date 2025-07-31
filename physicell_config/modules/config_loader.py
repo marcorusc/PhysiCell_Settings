@@ -1,43 +1,41 @@
-"""Utility for loading default parameters from JSON files.
+"""Utility for loading default parameters from embedded data.
 
-``ConfigLoader`` centralises access to the JSON templates shipped with the
-package.  Each method returns a dictionary suitable for direct insertion into
-the configuration modules so that defaults can be reused or extended.
+``ConfigLoader`` centralises access to the default parameters and configurations
+embedded in the package. Each method returns a dictionary suitable for direct 
+insertion into the configuration modules so that defaults can be reused or extended.
+
+Updated to use embedded data instead of JSON files to resolve file system
+access issues in containerized environments like MCP agents.
 """
 
-import json
-import os
 from typing import Dict, Any
-from pathlib import Path
+from ..config.embedded_defaults import get_default_parameters
 
 
 class ConfigLoader:
     """Loader for default PhysiCell configuration snippets.
 
-    The loader reads ``default_parameters.json`` at first use and provides
-    convenience methods to retrieve common phenotype or substrate templates.
+    The loader uses embedded Python data structures instead of JSON files
+    to provide convenience methods for retrieving common phenotype or 
+    substrate templates.
     """
     
     def __init__(self):
         self._config = None
-        self._config_path = Path(__file__).parent.parent / "config" / "default_parameters.json"
-    
+
     @property
     def config(self) -> Dict[str, Any]:
-        """Lazy load configuration from JSON file."""
+        """Lazy load configuration from embedded data."""
         if self._config is None:
             self._load_config()
         return self._config
-    
+
     def _load_config(self) -> None:
-        """Load configuration from JSON file."""
+        """Load configuration from embedded data."""
         try:
-            with open(self._config_path, 'r') as f:
-                self._config = json.load(f)
-        except FileNotFoundError:
-            raise FileNotFoundError(f"Configuration file not found: {self._config_path}")
-        except json.JSONDecodeError as e:
-            raise ValueError(f"Invalid JSON in configuration file: {e}")
+            self._config = get_default_parameters()
+        except Exception as e:
+            raise ValueError(f"Failed to load embedded configuration data: {e}")
     
     def get_cycle_model(self, model_name: str) -> Dict[str, Any]:
         """Get cycle model configuration by name."""
