@@ -294,7 +294,7 @@ class PhysiCellConfig:
             'substrates': list(self.substrates.get_substrates().keys()),
             'cell_types': list(self.cell_types.get_cell_types().keys()),
             'user_parameters': list(self.user_parameters.keys()),
-            'num_rules': len(self.cell_rules.get_rules()),
+            'num_rules': len(self.cell_rules_csv.get_rules()),
             'num_rulesets': len(self.cell_rules.get_rulesets()),
             'physiboss_enabled': self.physiboss.is_enabled(),
             'initial_conditions': len(self.initial_conditions.get_conditions()),
