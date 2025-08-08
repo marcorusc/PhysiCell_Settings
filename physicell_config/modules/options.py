@@ -106,6 +106,89 @@ class OptionsModule(BaseModule):
         # Random seed
         self._create_element(options_elem, "random_seed", str(self.options['random_seed']))
     
+    def load_from_xml(self, xml_element: Optional[ET.Element]) -> None:
+        """Load options configuration from XML element.
+        
+        Args:
+            xml_element: XML element containing overall options configuration, or None if missing
+        """
+        if xml_element is None:
+            return
+            
+        # Parse boolean options
+        legacy_elem = xml_element.find('legacy_random_points_on_sphere_in_divide')
+        if legacy_elem is not None and legacy_elem.text:
+            self.options['legacy_random_points_on_sphere_in_divide'] = self._parse_bool(legacy_elem.text)
+            
+        virtual_wall_elem = xml_element.find('virtual_wall_at_domain_edge') 
+        if virtual_wall_elem is not None and virtual_wall_elem.text:
+            self.options['virtual_wall_at_domain_edge'] = self._parse_bool(virtual_wall_elem.text)
+            
+        spring_adhesions_elem = xml_element.find('disable_automated_spring_adhesions')
+        if spring_adhesions_elem is not None and spring_adhesions_elem.text:
+            self.options['disable_automated_spring_adhesions'] = self._parse_bool(spring_adhesions_elem.text)
+            
+        # Parse random seed
+        random_seed_elem = xml_element.find('random_seed')
+        if random_seed_elem is not None and random_seed_elem.text:
+            self.options['random_seed'] = int(random_seed_elem.text)
+    
+    def load_parallel_from_xml(self, xml_element: Optional[ET.Element]) -> None:
+        """Load parallel configuration from XML element.
+        
+        Args:
+            xml_element: XML element containing parallel configuration, or None if missing
+        """
+        if xml_element is None:
+            return
+            
+        # Parse OpenMP threads
+        omp_threads_elem = xml_element.find('omp_num_threads')
+        if omp_threads_elem is not None and omp_threads_elem.text:
+            self.options['omp_num_threads'] = int(omp_threads_elem.text)
+    
+    def load_options_from_xml(self, xml_element: Optional[ET.Element]) -> None:
+        """Load additional options configuration from XML element.
+        
+        Args:
+            xml_element: XML element containing additional options configuration, or None if missing
+        """
+        if xml_element is None:
+            return
+            
+        # Parse timing parameters
+        max_time_elem = xml_element.find('max_time')
+        if max_time_elem is not None and max_time_elem.text:
+            self.options['max_time'] = float(max_time_elem.text)
+            # Get units if available
+            units = max_time_elem.get('units', 'min')
+            self.options['time_units'] = units
+            
+        time_units_elem = xml_element.find('time_units')
+        if time_units_elem is not None and time_units_elem.text:
+            self.options['time_units'] = time_units_elem.text
+            
+        space_units_elem = xml_element.find('space_units')
+        if space_units_elem is not None and space_units_elem.text:
+            self.options['space_units'] = space_units_elem.text
+            
+        # Parse time steps
+        dt_diffusion_elem = xml_element.find('dt_diffusion')
+        if dt_diffusion_elem is not None and dt_diffusion_elem.text:
+            self.options['dt_diffusion'] = float(dt_diffusion_elem.text)
+            
+        dt_mechanics_elem = xml_element.find('dt_mechanics')
+        if dt_mechanics_elem is not None and dt_mechanics_elem.text:
+            self.options['dt_mechanics'] = float(dt_mechanics_elem.text)
+            
+        dt_phenotype_elem = xml_element.find('dt_phenotype')
+        if dt_phenotype_elem is not None and dt_phenotype_elem.text:
+            self.options['dt_phenotype'] = float(dt_phenotype_elem.text)
+    
+    def _parse_bool(self, value: str) -> bool:
+        """Parse boolean value from XML text."""
+        return value.lower() in ('true', '1', 'yes')
+    
     def get_options(self) -> Dict[str, Any]:
         """Get all options."""
         return self.options.copy()

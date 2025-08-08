@@ -12,6 +12,7 @@ access issues in containerized environments like MCP agents.
 
 import csv
 import os
+import xml.etree.ElementTree as ET
 from typing import Dict, List, Any, Optional, Union
 from .base import BaseModule
 from ..config.embedded_signals_behaviors import get_signals_behaviors
@@ -437,5 +438,12 @@ class CellRulesCSV(BaseModule):
         """
         This module generates CSV files, not XML.
         The XML cell_rules section is handled by the main cell_rules module.
+        """
+        pass
+    
+    def load_from_xml(self, xml_element: Optional[ET.Element]) -> None:
+        """
+        This module generates CSV files and doesn't load from XML.
+        XML loading for cell rules is handled by the main CellRulesModule.
         """
         pass

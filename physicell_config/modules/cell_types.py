@@ -770,6 +770,370 @@ class CellTypeModule(BaseModule):
             else:
                 self._create_element(custom_data_elem, key, value)
     
+    def load_from_xml(self, xml_element: Optional[ET.Element]) -> None:
+        """Load cell type definitions from XML element.
+        
+        Args:
+            xml_element: XML element containing cell definitions, or None if missing
+        """
+        if xml_element is None:
+            return
+            
+        # Clear existing cell types
+        self.cell_types = {}
+        
+        # Parse each cell definition
+        cell_definitions = xml_element.findall('cell_definition')
+        for cell_def in cell_definitions:
+            name = cell_def.get('name')
+            if not name:
+                continue
+                
+            cell_id = int(cell_def.get('ID', 0))
+            parent_type = cell_def.get('parent_type')
+            
+            # Create cell type with basic structure
+            self._create_cell_type_structure(name, parent_type)
+            
+            # Update ID
+            self.cell_types[name]['ID'] = cell_id
+            
+            # Parse phenotype
+            phenotype_elem = cell_def.find('phenotype')
+            if phenotype_elem is not None:
+                self._parse_phenotype(name, phenotype_elem)
+            
+            # Parse custom data
+            custom_data_elem = cell_def.find('custom_data')
+            if custom_data_elem is not None:
+                self._parse_custom_data(name, custom_data_elem)
+    
+    def _create_cell_type_structure(self, name: str, parent_type: Optional[str]) -> None:
+        """Create the basic cell type data structure."""
+        # Use existing add_cell_type method which handles templates and structure
+        self.add_cell_type(name, parent_type or "default", "default")
+    
+    def _parse_phenotype(self, cell_name: str, phenotype_elem: ET.Element) -> None:
+        """Parse phenotype section for a cell type."""
+        cell_data = self.cell_types[cell_name]
+        phenotype = cell_data['phenotype']
+        
+        # Parse cycle
+        cycle_elem = phenotype_elem.find('cycle')
+        if cycle_elem is not None:
+            self._parse_cycle(phenotype['cycle'], cycle_elem)
+        
+        # Parse death 
+        death_elem = phenotype_elem.find('death')
+        if death_elem is not None:
+            self._parse_death(phenotype['death'], death_elem)
+        
+        # Parse volume
+        volume_elem = phenotype_elem.find('volume')
+        if volume_elem is not None:
+            self._parse_volume(phenotype['volume'], volume_elem)
+        
+        # Parse mechanics
+        mechanics_elem = phenotype_elem.find('mechanics')
+        if mechanics_elem is not None:
+            self._parse_mechanics(phenotype['mechanics'], mechanics_elem)
+        
+        # Parse motility
+        motility_elem = phenotype_elem.find('motility')
+        if motility_elem is not None:
+            self._parse_motility(phenotype['motility'], motility_elem)
+        
+        # Parse secretion
+        secretion_elem = phenotype_elem.find('secretion')
+        if secretion_elem is not None:
+            self._parse_secretion(phenotype['secretion'], secretion_elem)
+        
+        # Parse intracellular (PhysiBOSS)
+        intracellular_elem = phenotype_elem.find('intracellular')
+        if intracellular_elem is not None:
+            self._parse_intracellular(phenotype, intracellular_elem)
+    
+    def _parse_cycle(self, cycle_data: Dict[str, Any], cycle_elem: ET.Element) -> None:
+        """Parse cycle model and parameters."""
+        # Parse model name
+        model_elem = cycle_elem.find('model')
+        if model_elem is not None and model_elem.text and model_elem.text.strip():
+            cycle_data['model'] = model_elem.text.strip()
+            
+        # Parse phase transition rates
+        rates_elem = cycle_elem.find('phase_transition_rates')
+        if rates_elem is not None:
+            rates = rates_elem.findall('rate')
+            cycle_data['phase_transition_rates'] = []
+            for rate in rates:
+                try:
+                    start_index = int(rate.get('start_index', 0))
+                    end_index = int(rate.get('end_index', 0))
+                    rate_value = float(rate.text.strip()) if rate.text and rate.text.strip() else 0.0
+                    fixed_duration = rate.get('fixed_duration', 'false').lower() == 'true'
+                    
+                    cycle_data['phase_transition_rates'].append({
+                        'start_index': start_index,
+                        'end_index': end_index,
+                        'rate': rate_value,
+                        'fixed_duration': fixed_duration
+                    })
+                except (ValueError, AttributeError):
+                    # Skip invalid rate entries
+                    pass
+    
+    def _parse_death(self, death_data: Dict[str, Any], death_elem: ET.Element) -> None:
+        """Parse death model parameters."""
+        # Parse death models
+        for model_elem in death_elem.findall('model'):
+            model_name = model_elem.get('name')
+            if model_name and model_name in death_data:
+                # Parse rate
+                rate_elem = model_elem.find('rate')
+                if rate_elem is not None and rate_elem.text and rate_elem.text.strip():
+                    try:
+                        death_data[model_name]['rate'] = float(rate_elem.text.strip())
+                    except ValueError:
+                        pass
+                
+                # Parse parameters
+                params_elem = model_elem.find('parameters')
+                if params_elem is not None:
+                    for param in params_elem:
+                        param_name = param.tag
+                        if param.text and param.text.strip() and param_name in death_data[model_name]:
+                            try:
+                                death_data[model_name][param_name] = float(param.text.strip())
+                            except ValueError:
+                                pass
+    
+    def _parse_volume(self, volume_data: Dict[str, Any], volume_elem: ET.Element) -> None:
+        """Parse volume parameters."""
+        for child in volume_elem:
+            if child.tag in volume_data and child.text and child.text.strip():
+                try:
+                    volume_data[child.tag] = float(child.text.strip())
+                except ValueError:
+                    # Skip invalid numeric values
+                    pass
+    
+    def _parse_mechanics(self, mechanics_data: Dict[str, Any], mechanics_elem: ET.Element) -> None:
+        """Parse mechanics parameters."""
+        # Define which fields are simple numeric values vs complex structures
+        simple_numeric_fields = {
+            'cell_cell_adhesion_strength',
+            'cell_cell_repulsion_strength', 
+            'relative_maximum_adhesion_distance',
+            'attachment_elastic_constant',
+            'attachment_rate',
+            'detachment_rate',
+            'maximum_number_of_attachments'
+        }
+        
+        for child in mechanics_elem:
+            if child.tag in mechanics_data and child.text and child.text.strip():
+                # Only try to parse as float if it's a known simple numeric field
+                if child.tag in simple_numeric_fields:
+                    try:
+                        mechanics_data[child.tag] = float(child.text.strip())
+                    except ValueError:
+                        # Skip invalid numeric values
+                        pass
+            elif child.tag in ['cell_adhesion_affinities', 'options']:
+                # Skip complex structure fields that only contain whitespace
+                # These would need special parsing logic
+                pass
+    
+    def _parse_motility(self, motility_data: Dict[str, Any], motility_elem: ET.Element) -> None:
+        """Parse motility parameters."""
+        for child in motility_elem:
+            if child.tag in motility_data and child.text and child.text.strip():
+                try:
+                    if child.tag in ['enabled', 'use_2D']:
+                        motility_data[child.tag] = child.text.strip().lower() == 'true'
+                    else:
+                        motility_data[child.tag] = float(child.text.strip())
+                except ValueError:
+                    # Skip invalid values
+                    pass
+    
+    def _parse_secretion(self, secretion_data: Dict[str, Any], secretion_elem: ET.Element) -> None:
+        """Parse secretion parameters."""
+        # Parse substrate secretion rates
+        for substrate_elem in secretion_elem.findall('substrate'):
+            substrate_name = substrate_elem.get('name')
+            if substrate_name:
+                substrate_data = {}
+                
+                for param in substrate_elem:
+                    if param.text and param.text.strip():
+                        try:
+                            substrate_data[param.tag] = float(param.text.strip())
+                        except ValueError:
+                            # Skip invalid numeric values
+                            pass
+                
+                if substrate_data:  # Only add if we have valid data
+                    secretion_data[substrate_name] = substrate_data
+    
+    def _parse_custom_data(self, cell_name: str, custom_data_elem: ET.Element) -> None:
+        """Parse custom data variables."""
+        custom_data = self.cell_types[cell_name]['custom_data']
+        
+        for var_elem in custom_data_elem:
+            var_name = var_elem.get('name')
+            if var_name and var_elem.text and var_elem.text.strip():
+                # Try to parse as number, fall back to string
+                try:
+                    value = float(var_elem.text.strip())
+                    # Convert to int if it's a whole number
+                    if value.is_integer():
+                        value = int(value)
+                except ValueError:
+                    value = var_elem.text.strip()
+                
+                custom_data[var_name] = value
+    
+    def _parse_intracellular(self, phenotype_data: Dict[str, Any], intracellular_elem: ET.Element) -> None:
+        """Parse intracellular/PhysiBOSS model configuration."""
+        intracellular_data = {
+            'type': intracellular_elem.get('type', 'maboss'),
+            'bnd_filename': '',
+            'cfg_filename': '',
+            'settings': {},
+            'mapping': {
+                'inputs': [],
+                'outputs': []
+            }
+        }
+        
+        # Parse file references
+        bnd_elem = intracellular_elem.find('bnd_filename')
+        if bnd_elem is not None and bnd_elem.text:
+            intracellular_data['bnd_filename'] = bnd_elem.text.strip()
+        
+        cfg_elem = intracellular_elem.find('cfg_filename')
+        if cfg_elem is not None and cfg_elem.text:
+            intracellular_data['cfg_filename'] = cfg_elem.text.strip()
+        
+        # Parse settings
+        settings_elem = intracellular_elem.find('settings')
+        if settings_elem is not None:
+            self._parse_intracellular_settings(intracellular_data['settings'], settings_elem)
+        
+        # Parse mapping
+        mapping_elem = intracellular_elem.find('mapping')
+        if mapping_elem is not None:
+            self._parse_intracellular_mapping(intracellular_data['mapping'], mapping_elem)
+        
+        # Store in phenotype
+        phenotype_data['intracellular'] = intracellular_data
+    
+    def _parse_intracellular_settings(self, settings_data: Dict[str, Any], settings_elem: ET.Element) -> None:
+        """Parse intracellular settings section."""
+        # Parse simple numeric/string settings
+        for child in settings_elem:
+            if child.tag in ['intracellular_dt', 'time_stochasticity', 'scaling', 'start_time']:
+                if child.text and child.text.strip():
+                    try:
+                        settings_data[child.tag] = float(child.text.strip())
+                    except ValueError:
+                        settings_data[child.tag] = child.text.strip()
+            elif child.tag == 'inheritance':
+                # Parse inheritance settings
+                inheritance_data = {}
+                if child.get('global'):
+                    inheritance_data['global'] = child.get('global').lower() == 'true'
+                settings_data['inheritance'] = inheritance_data
+            elif child.tag == 'mutations':
+                # Parse mutations
+                mutations = []
+                for mutation in child.findall('mutation'):
+                    intracellular_name = mutation.get('intracellular_name')
+                    if intracellular_name and mutation.text and mutation.text.strip():
+                        try:
+                            value = float(mutation.text.strip())
+                            if value.is_integer():
+                                value = int(value)
+                        except ValueError:
+                            value = mutation.text.strip()
+                        mutations.append({
+                            'intracellular_name': intracellular_name,
+                            'value': value
+                        })
+                settings_data['mutations'] = mutations
+            elif child.tag == 'initial_values':
+                # Parse initial values
+                initial_values = []
+                for initial in child.findall('initial_value'):
+                    intracellular_name = initial.get('intracellular_name')
+                    if intracellular_name and initial.text and initial.text.strip():
+                        try:
+                            value = float(initial.text.strip())
+                        except ValueError:
+                            value = initial.text.strip()
+                        initial_values.append({
+                            'intracellular_name': intracellular_name,
+                            'value': value
+                        })
+                settings_data['initial_values'] = initial_values
+    
+    def _parse_intracellular_mapping(self, mapping_data: Dict[str, Any], mapping_elem: ET.Element) -> None:
+        """Parse intracellular input/output mapping."""
+        # Parse inputs
+        for input_elem in mapping_elem.findall('input'):
+            physicell_name = input_elem.get('physicell_name')
+            intracellular_name = input_elem.get('intracellular_name')
+            
+            if physicell_name and intracellular_name:
+                input_data = {
+                    'physicell_name': physicell_name,
+                    'intracellular_name': intracellular_name,
+                    'settings': {}
+                }
+                
+                # Parse input settings
+                settings_elem = input_elem.find('settings')
+                if settings_elem is not None:
+                    for setting in settings_elem:
+                        if setting.text and setting.text.strip():
+                            try:
+                                value = float(setting.text.strip())
+                                if value.is_integer():
+                                    value = int(value)
+                            except ValueError:
+                                value = setting.text.strip()
+                            input_data['settings'][setting.tag] = value
+                
+                mapping_data['inputs'].append(input_data)
+        
+        # Parse outputs
+        for output_elem in mapping_elem.findall('output'):
+            physicell_name = output_elem.get('physicell_name')
+            intracellular_name = output_elem.get('intracellular_name')
+            
+            if physicell_name and intracellular_name:
+                output_data = {
+                    'physicell_name': physicell_name,
+                    'intracellular_name': intracellular_name,
+                    'settings': {}
+                }
+                
+                # Parse output settings
+                settings_elem = output_elem.find('settings')
+                if settings_elem is not None:
+                    for setting in settings_elem:
+                        if setting.text and setting.text.strip():
+                            try:
+                                value = float(setting.text.strip())
+                                if value.is_integer():
+                                    value = int(value)
+                            except ValueError:
+                                value = setting.text.strip()
+                            output_data['settings'][setting.tag] = value
+                
+                mapping_data['outputs'].append(output_data)
+    
     def get_cell_types(self) -> Dict[str, Dict[str, Any]]:
         """Get all cell types."""
         return self.cell_types.copy()

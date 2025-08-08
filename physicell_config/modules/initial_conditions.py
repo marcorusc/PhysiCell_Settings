@@ -163,6 +163,41 @@ class InitialConditionsModule(BaseModule):
         
         self._create_element(file_elem, "filename", condition['filename'])
     
+    def load_from_xml(self, xml_element: Optional[ET.Element]) -> None:
+        """Load initial conditions configuration from XML element.
+        
+        Args:
+            xml_element: XML element containing initial conditions configuration, or None if missing
+        """
+        if xml_element is None:
+            # No initial conditions section, keep defaults
+            return
+            
+        # Look for cell_positions element
+        cell_positions_elem = xml_element.find('cell_positions')
+        if cell_positions_elem is not None:
+            # Parse attributes
+            position_type = cell_positions_elem.get('type', 'csv')
+            enabled = cell_positions_elem.get('enabled', 'false').lower() == 'true'
+            
+            # For CSV type, parse folder and filename
+            if position_type == 'csv':
+                folder_elem = cell_positions_elem.find('folder')
+                filename_elem = cell_positions_elem.find('filename')
+                
+                folder = folder_elem.text.strip() if folder_elem is not None and folder_elem.text else "./config"
+                filename = filename_elem.text.strip() if filename_elem is not None and filename_elem.text else "cells.csv"
+                
+                # Store as CSV configuration (overwrites any existing conditions)
+                self.initial_conditions = {
+                    'type': 'csv',
+                    'folder': folder,
+                    'filename': filename,
+                    'enabled': enabled
+                }
+            # Future: could add support for other position types (clusters, rectangles, etc.)
+            # For now, we focus on the CSV format which is what PhysiCell typically uses
+    
     def get_conditions(self) -> List[Dict[str, Any]]:
         """Return a copy of all currently defined conditions."""
         return self.initial_conditions.copy()

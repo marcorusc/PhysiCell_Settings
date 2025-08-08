@@ -5,6 +5,7 @@ Cell rules configuration module for PhysiCell.
 from typing import Dict, Any, List, Optional, Tuple
 import xml.etree.ElementTree as ET
 import csv
+import os
 from .base import BaseModule
 
 
@@ -165,6 +166,49 @@ class CellRulesModule(BaseModule):
         
         # Add settings (empty for now)
         self._create_element(cell_rules_elem, "settings")
+    
+    def load_from_xml(self, xml_element: Optional[ET.Element]) -> None:
+        """Load cell rules configuration from XML element.
+        
+        Args:
+            xml_element: XML element containing cell rules configuration, or None if missing
+        """
+        if xml_element is None:
+            return
+            
+        # Clear existing rulesets
+        self.rulesets = {}
+        
+        # Parse rulesets
+        rulesets_elem = xml_element.find('rulesets')
+        if rulesets_elem is not None:
+            for ruleset_elem in rulesets_elem.findall('ruleset'):
+                # Get attributes
+                protocol = ruleset_elem.get('protocol', 'CBHG')
+                version = ruleset_elem.get('version', '3.0')
+                format_type = ruleset_elem.get('format', 'csv')
+                enabled = ruleset_elem.get('enabled', 'false').lower() == 'true'
+                
+                # Get folder and filename
+                folder_elem = ruleset_elem.find('folder')
+                filename_elem = ruleset_elem.find('filename')
+                
+                if folder_elem is not None and filename_elem is not None:
+                    folder = folder_elem.text.strip() if folder_elem.text else './config'
+                    filename = filename_elem.text.strip() if filename_elem.text else 'cell_rules.csv'
+                    
+                    # Create a unique name for this ruleset (use filename without extension)
+                    ruleset_name = os.path.splitext(filename)[0]
+                    
+                    # Add the ruleset
+                    self.rulesets[ruleset_name] = {
+                        'folder': folder,
+                        'filename': filename,
+                        'enabled': enabled,
+                        'protocol': protocol,
+                        'version': version,
+                        'format': format_type
+                    }
     
     def get_rules(self) -> List[Dict[str, Any]]:
         """Return a copy of all stored rule dictionaries."""

@@ -95,6 +95,51 @@ class DomainModule(BaseModule):
         # Add 2D flag
         self._create_element(domain_elem, "use_2D", str(self.data['use_2D']).lower())
     
+    def load_from_xml(self, xml_element: Optional[ET.Element]) -> None:
+        """Load domain configuration from XML element.
+        
+        Args:
+            xml_element: XML element containing domain configuration, or None if missing
+        """
+        if xml_element is None:
+            return
+            
+        # Load domain bounds
+        x_min = self._safe_get_text(xml_element, 'x_min', self.data['x_min'])
+        x_max = self._safe_get_text(xml_element, 'x_max', self.data['x_max'])
+        y_min = self._safe_get_text(xml_element, 'y_min', self.data['y_min'])
+        y_max = self._safe_get_text(xml_element, 'y_max', self.data['y_max'])
+        z_min = self._safe_get_text(xml_element, 'z_min', self.data['z_min'])
+        z_max = self._safe_get_text(xml_element, 'z_max', self.data['z_max'])
+        
+        # Load mesh spacing
+        dx = self._safe_get_text(xml_element, 'dx', self.data['dx'])
+        dy = self._safe_get_text(xml_element, 'dy', self.data['dy'])
+        dz = self._safe_get_text(xml_element, 'dz', self.data['dz'])
+        
+        # Load 2D flag
+        use_2D_text = self._safe_get_text(xml_element, 'use_2D', str(self.data['use_2D']))
+        use_2D = use_2D_text.lower() in ['true', '1', 'yes', 'on']
+        
+        # Convert to appropriate types and update data
+        try:
+            self.data.update({
+                'x_min': float(x_min),
+                'x_max': float(x_max),
+                'y_min': float(y_min),
+                'y_max': float(y_max),
+                'z_min': float(z_min),
+                'z_max': float(z_max),
+                'dx': float(dx),
+                'dy': float(dy),
+                'dz': float(dz),
+                'use_2D': use_2D
+            })
+        except (ValueError, TypeError) as e:
+            # Log warning but don't fail completely
+            print(f"Warning: Failed to parse some domain values: {e}")
+            # Keep existing values for any that failed to parse
+    
     def get_info(self) -> Dict[str, Any]:
         """Return a copy of the current domain configuration."""
         return self.data.copy()
