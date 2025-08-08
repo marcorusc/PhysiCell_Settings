@@ -24,8 +24,9 @@ to provide a clean interface while organizing code into manageable modules.
 
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional, Tuple, Union
 import os
+from pathlib import Path
 
 # Import modules
 from .modules.domain import DomainModule
@@ -37,6 +38,7 @@ from .modules.physiboss import PhysiBoSSModule
 from .modules.options import OptionsModule
 from .modules.initial_conditions import InitialConditionsModule
 from .modules.save_options import SaveOptionsModule
+from .xml_loader import XMLLoader
 
 
 class PhysiCellConfig:
@@ -67,6 +69,105 @@ class PhysiCellConfig:
         self._add_standard_user_parameters()
         
         # Add default substrate if none are present
+        self._ensure_default_substrate()
+    
+    @classmethod
+    def from_xml(cls, filename: Union[str, Path]) -> 'PhysiCellConfig':
+        """Create PhysiCellConfig instance from XML file.
+        
+        Args:
+            filename: Path to PhysiCell XML configuration file
+            
+        Returns:
+            New PhysiCellConfig instance with loaded configuration
+            
+        Example:
+            config = PhysiCellConfig.from_xml("PhysiCell_settings.xml")
+        """
+        config = cls()
+        config.load_xml(filename)
+        return config
+        
+    @classmethod  
+    def from_xml_string(cls, xml_content: str) -> 'PhysiCellConfig':
+        """Create PhysiCellConfig instance from XML string.
+        
+        Args:
+            xml_content: XML configuration as string
+            
+        Returns:
+            New PhysiCellConfig instance with loaded configuration
+        """
+        config = cls()
+        config.load_xml_string(xml_content)
+        return config
+        
+    def load_xml(self, filename: Union[str, Path], merge: bool = False) -> None:
+        """Load XML configuration into existing instance.
+        
+        Args:
+            filename: Path to XML file
+            merge: If True, merge with existing config. If False, replace.
+        """
+        if not merge:
+            # Reset to default state before loading
+            self._reset_to_defaults()
+            
+        loader = XMLLoader(self)
+        loader.load_from_file(filename)
+    
+    def validate_xml_file(self, filename: Union[str, Path]) -> tuple[bool, str]:
+        """Validate that an XML file is a valid PhysiCell configuration.
+        
+        Args:
+            filename: Path to XML file to validate
+            
+        Returns:
+            Tuple of (is_valid, error_message)
+        """
+        loader = XMLLoader(self)
+        return loader.validate_physicell_xml(filename)
+        
+    def load_xml_string(self, xml_content: str, merge: bool = False) -> None:
+        """Load XML from string into existing instance.
+        
+        Args:
+            xml_content: XML configuration as string
+            merge: If True, merge with existing config. If False, replace.
+        """
+        if not merge:
+            # Reset to default state before loading
+            self._reset_to_defaults()
+            
+        loader = XMLLoader(self)
+        loader.load_from_string(xml_content)
+        
+    def copy(self) -> 'PhysiCellConfig':
+        """Create deep copy of configuration.
+        
+        Returns:
+            New PhysiCellConfig instance with identical configuration
+        """
+        # Create XML representation and load into new instance
+        xml_content = self.generate_xml()
+        return self.from_xml_string(xml_content)
+        
+    def _reset_to_defaults(self) -> None:
+        """Reset configuration to default state."""
+        # Reinitialize all modules to default state
+        self.domain = DomainModule(self)
+        self.substrates = SubstrateModule(self)
+        self.cell_types = CellTypeModule(self)
+        self.cell_rules = CellRulesModule(self)
+        self.physiboss = PhysiBoSSModule(self)
+        self.options = OptionsModule(self)
+        self.initial_conditions = InitialConditionsModule(self)
+        self.save_options = SaveOptionsModule(self)
+        
+        # Reset other attributes
+        self._cell_rules_csv = None
+        self.user_parameters = {}
+        self._add_standard_user_parameters()
         self._ensure_default_substrate()
     
     @property

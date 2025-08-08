@@ -296,6 +296,28 @@ class PhysiBoSSModule(BaseModule):
                         if 'smoothing' in out_settings:
                             self._create_element(settings_elem, "smoothing", out_settings['smoothing'])
 
+    def load_from_xml(self, xml_element: Optional[ET.Element]) -> None:
+        """Load PhysiBoSS configuration from XML element.
+        
+        Args:
+            xml_element: XML element containing intracellular configuration, or None if missing
+        """
+        # TODO: Implement PhysiBoSS XML loading in Phase 2
+        # For now, keep existing defaults
+        pass
+
     def is_enabled(self) -> bool:
-        """Check if PhysiBoSS is enabled."""
+        """Check if PhysiBoSS is enabled.
+        
+        Returns True if any cell type has intracellular models configured.
+        """
+        # Check if any cell type has intracellular models
+        if hasattr(self._config, 'cell_types') and self._config.cell_types:
+            cell_types = self._config.cell_types.get_cell_types()
+            for cell_name, cell_data in cell_types.items():
+                phenotype = cell_data.get('phenotype', {})
+                if 'intracellular' in phenotype:
+                    return True
+        
+        # Fallback to manual enabled flag
         return self.enabled 

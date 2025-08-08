@@ -30,7 +30,7 @@ class SubstrateModule(BaseModule):
         name:
             Substrate identifier.
         diffusion_coefficient:
-            Diffusion constant in :math:`\mu m^2/min`.
+            Diffusion constant in micron^2/min.
         decay_rate:
             First-order decay rate ``1/min``.
         initial_condition:
@@ -144,6 +144,102 @@ class SubstrateModule(BaseModule):
         dirichlet_nodes_elem.set("type", "matlab") 
         dirichlet_nodes_elem.set("enabled", "false")
         self._create_element(dirichlet_nodes_elem, "filename", "./config/dirichlet.mat")
+    
+    def load_from_xml(self, xml_element: Optional[ET.Element]) -> None:
+        """Load substrate configuration from XML element.
+        
+        Args:
+            xml_element: XML element containing microenvironment configuration, or None if missing
+        """
+        if xml_element is None:
+            # No microenvironment section found, keep defaults
+            return
+            
+        # Clear existing substrates
+        self.substrates = {}
+        
+        # Parse substrate variables
+        variables = xml_element.findall('variable')
+        for var in variables:
+            name = var.get('name')
+            if not name:
+                continue
+                
+            units = var.get('units', 'dimensionless')
+            substrate_id = int(var.get('ID', 0))
+            
+            # Initialize substrate with defaults
+            substrate_data = {
+                'id': substrate_id,
+                'diffusion_coefficient': 1000.0,
+                'decay_rate': 0.1,
+                'initial_condition': 0.0,
+                'dirichlet_enabled': False,
+                'dirichlet_value': 0.0,
+                'units': units,
+                'initial_units': units,
+                'dirichlet_options': {
+                    'xmin': {'enabled': False, 'value': 0.0},
+                    'xmax': {'enabled': False, 'value': 0.0},
+                    'ymin': {'enabled': False, 'value': 0.0},
+                    'ymax': {'enabled': False, 'value': 0.0},
+                    'zmin': {'enabled': False, 'value': 0.0},
+                    'zmax': {'enabled': False, 'value': 0.0}
+                }
+            }
+            
+            # Parse physical parameters
+            physical_params = var.find('physical_parameter_set')
+            if physical_params is not None:
+                diff_coeff_elem = physical_params.find('diffusion_coefficient')
+                if diff_coeff_elem is not None and diff_coeff_elem.text:
+                    substrate_data['diffusion_coefficient'] = float(diff_coeff_elem.text)
+                    
+                decay_rate_elem = physical_params.find('decay_rate')
+                if decay_rate_elem is not None and decay_rate_elem.text:
+                    substrate_data['decay_rate'] = float(decay_rate_elem.text)
+            
+            # Parse initial condition
+            initial_elem = var.find('initial_condition')
+            if initial_elem is not None and initial_elem.text:
+                substrate_data['initial_condition'] = float(initial_elem.text)
+                # Use units from initial_condition if available
+                if initial_elem.get('units'):
+                    substrate_data['initial_units'] = initial_elem.get('units')
+            
+            # Parse Dirichlet boundary condition
+            dirichlet_elem = var.find('Dirichlet_boundary_condition')
+            if dirichlet_elem is not None:
+                if dirichlet_elem.text:
+                    substrate_data['dirichlet_value'] = float(dirichlet_elem.text)
+                # Check if enabled
+                enabled_attr = dirichlet_elem.get('enabled', 'false').lower()
+                substrate_data['dirichlet_enabled'] = enabled_attr in ('true', '1', 'yes')
+            
+            # Parse Dirichlet options (boundary-specific)
+            dirichlet_opts = var.find('Dirichlet_options')
+            if dirichlet_opts is not None:
+                for boundary_value in dirichlet_opts.findall('boundary_value'):
+                    boundary_id = boundary_value.get('ID')
+                    if boundary_id and boundary_id in substrate_data['dirichlet_options']:
+                        enabled_attr = boundary_value.get('enabled', 'false').lower()
+                        enabled = enabled_attr in ('true', '1', 'yes')
+                        value = float(boundary_value.text) if boundary_value.text else 0.0
+                        substrate_data['dirichlet_options'][boundary_id] = {
+                            'enabled': enabled,
+                            'value': value
+                        }
+            
+            # Store substrate
+            self.substrates[name] = substrate_data
+        
+        # Parse microenvironment options
+        options = xml_element.find('options')
+        if options is not None:
+            track_elem = options.find('track_internalized_substrates_in_each_agent')
+            if track_elem is not None and track_elem.text:
+                track_value = track_elem.text.lower()
+                self.track_internalized_substrates = track_value in ('true', '1', 'yes')
     
     def get_substrates(self) -> Dict[str, Dict[str, Any]]:
         """Get all substrates."""
