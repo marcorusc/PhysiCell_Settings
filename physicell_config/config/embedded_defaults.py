@@ -51,16 +51,16 @@ DEFAULT_PARAMETERS: Dict[str, Any] = {
         },
         "live": {
             "code": "5",
-            "name": "Live",
+            "name": "live",
             "time_units": "min", 
             "phases": [
-                {"index": 0, "code": "14", "name": "Live", "division_at_phase_exit": True}
+                {"index": 0, "code": "14", "name": "live", "division_at_phase_exit": True}
             ],
             "phase_links": [
                 {"from": 0, "to": 0, "fixed_duration": False}
             ],
             "transition_rates": [
-                {"from": 0, "to": 0, "rate": 0.00072}
+                {"from": 0, "to": 0, "rate": 0.0}
             ]
         },
         "cycling_quiescent": {
