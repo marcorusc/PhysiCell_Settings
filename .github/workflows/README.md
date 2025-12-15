@@ -124,10 +124,10 @@ To release a new version of the package:
 
 ### Security Notes
 
-- The workflow uses trusted publishing with `id-token: write` permission
+- The workflow uses API token authentication for PyPI publishing
 - Never commit your PyPI API token to the repository
 - Always use GitHub Secrets for sensitive credentials
-- The token is only accessible during the publish job
+- The token is only accessible during the publish job and is not exposed in logs
 
 ### Additional Resources
 
