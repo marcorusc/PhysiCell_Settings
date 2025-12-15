@@ -35,7 +35,10 @@ class CellRulesModule(BaseModule):
         self.rulesets[name] = {
             'folder': folder,
             'filename': filename,
-            'enabled': enabled
+            'enabled': enabled,
+            'protocol': 'CBHG',
+            'version': '3.0',
+            'format': 'csv'
         }
     
     def add_rule(self, signal: str, behavior: str, cell_type: str,
@@ -143,9 +146,9 @@ class CellRulesModule(BaseModule):
         if self.rulesets:
             for name, ruleset in self.rulesets.items():
                 ruleset_elem = self._create_element(rulesets_elem, "ruleset")
-                ruleset_elem.set("protocol", "CBHG")
-                ruleset_elem.set("version", "3.0")
-                ruleset_elem.set("format", "csv")
+                ruleset_elem.set("protocol", ruleset.get('protocol', 'CBHG'))
+                ruleset_elem.set("version", ruleset.get('version', '3.0'))
+                ruleset_elem.set("format", ruleset.get('format', 'csv'))
                 ruleset_elem.set("enabled", str(ruleset['enabled']).lower())
                 
                 self._create_element(ruleset_elem, "folder", ruleset['folder'])
@@ -160,12 +163,6 @@ class CellRulesModule(BaseModule):
             
             self._create_element(ruleset_elem, "folder", "./config")
             self._create_element(ruleset_elem, "filename", "cell_rules.csv")
-        
-        # Add settings (empty for now)
-        self._create_element(cell_rules_elem, "settings")
-        
-        # Add settings (empty for now)
-        self._create_element(cell_rules_elem, "settings")
     
     def load_from_xml(self, xml_element: Optional[ET.Element]) -> None:
         """Load cell rules configuration from XML element.
@@ -197,8 +194,12 @@ class CellRulesModule(BaseModule):
                     folder = folder_elem.text.strip() if folder_elem.text else './config'
                     filename = filename_elem.text.strip() if filename_elem.text else 'cell_rules.csv'
                     
-                    # Create a unique name for this ruleset (use filename without extension)
-                    ruleset_name = os.path.splitext(filename)[0]
+                    base_name = os.path.splitext(filename)[0]
+                    ruleset_name = base_name
+                    counter = 1
+                    while ruleset_name in self.rulesets:
+                        ruleset_name = f"{base_name}_{counter}"
+                        counter += 1
                     
                     # Add the ruleset
                     self.rulesets[ruleset_name] = {

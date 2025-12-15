@@ -9,6 +9,7 @@ access issues in containerized environments like MCP agents.
 """
 
 from typing import Dict, Any
+import copy
 from ..config.embedded_defaults import get_default_parameters
 
 
@@ -42,59 +43,59 @@ class ConfigLoader:
         models = self.config.get("cell_cycle_models", {})
         if model_name not in models:
             raise ValueError(f"Unknown cycle model: {model_name}")
-        return models[model_name].copy()
+        return copy.deepcopy(models[model_name])
     
     def get_death_model(self, model_name: str) -> Dict[str, Any]:
         """Get death model configuration by name."""
         models = self.config.get("death_models", {})
         if model_name not in models:
             raise ValueError(f"Unknown death model: {model_name}")
-        return models[model_name].copy()
+        return copy.deepcopy(models[model_name])
     
     def get_volume_defaults(self) -> Dict[str, Any]:
         """Get default volume parameters."""
-        return self.config.get("volume_defaults", {}).copy()
+        return copy.deepcopy(self.config.get("volume_defaults", {}))
     
     def get_mechanics_defaults(self) -> Dict[str, Any]:
         """Get default mechanics parameters."""
-        return self.config.get("mechanics_defaults", {}).copy()
+        return copy.deepcopy(self.config.get("mechanics_defaults", {}))
     
     def get_motility_defaults(self) -> Dict[str, Any]:
         """Get default motility parameters."""
-        return self.config.get("motility_defaults", {}).copy()
+        return copy.deepcopy(self.config.get("motility_defaults", {}))
     
     def get_secretion_defaults(self) -> Dict[str, Any]:
         """Get default secretion parameters."""
-        return self.config.get("secretion_defaults", {}).copy()
+        return copy.deepcopy(self.config.get("secretion_defaults", {}))
     
     def get_cell_interactions_defaults(self) -> Dict[str, Any]:
         """Get default cell interactions parameters."""
-        return self.config.get("cell_interactions_defaults", {}).copy()
+        return copy.deepcopy(self.config.get("cell_interactions_defaults", {}))
     
     def get_cell_transformations_defaults(self) -> Dict[str, Any]:
         """Get default cell transformations parameters."""
-        return self.config.get("cell_transformations_defaults", {}).copy()
+        return copy.deepcopy(self.config.get("cell_transformations_defaults", {}))
     
     def get_cell_integrity_defaults(self) -> Dict[str, Any]:
         """Get default cell integrity parameters."""
-        return self.config.get("cell_integrity_defaults", {}).copy()
+        return copy.deepcopy(self.config.get("cell_integrity_defaults", {}))
     
     def get_custom_data_defaults(self, data_type: str = "sample") -> Dict[str, Any]:
         """Get default custom data parameters."""
         defaults = self.config.get("custom_data_defaults", {})
         if data_type in defaults:
-            return defaults[data_type].copy()
-        return defaults.get("sample", {}).copy()
+            return copy.deepcopy(defaults[data_type])
+        return copy.deepcopy(defaults.get("sample", {}))
     
     def get_initial_parameter_distributions_defaults(self) -> Dict[str, Any]:
         """Get default initial parameter distributions."""
-        return self.config.get("initial_parameter_distributions_defaults", {}).copy()
+        return copy.deepcopy(self.config.get("initial_parameter_distributions_defaults", {}))
     
     def get_intracellular_defaults(self, intracellular_type: str = "maboss") -> Dict[str, Any]:
         """Get default intracellular parameters."""
         defaults = self.config.get("intracellular_defaults", {})
         if intracellular_type in defaults:
-            return defaults[intracellular_type].copy()
+            return copy.deepcopy(defaults[intracellular_type])
         return {}
     
     def get_cell_type_template(self, template_name: str) -> Dict[str, Any]:
@@ -102,14 +103,14 @@ class ConfigLoader:
         templates = self.config.get("cell_type_templates", {})
         if template_name not in templates:
             raise ValueError(f"Unknown cell type template: {template_name}")
-        return templates[template_name].copy()
+        return copy.deepcopy(templates[template_name])
     
     def get_substrate_defaults(self, substrate_name: str = "substrate") -> Dict[str, Any]:
         """Get default substrate parameters."""
         defaults = self.config.get("substrate_defaults", {})
         if substrate_name in defaults:
-            return defaults[substrate_name].copy()
-        return defaults.get("substrate", {}).copy()
+            return copy.deepcopy(defaults[substrate_name])
+        return copy.deepcopy(defaults.get("substrate", {}))
     
     def get_default_phenotype(self, template: str = "default") -> Dict[str, Any]:
         """Create a complete default phenotype based on template."""

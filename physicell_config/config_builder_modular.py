@@ -70,6 +70,17 @@ class PhysiCellConfig:
         
         # Add default substrate if none are present
         self._ensure_default_substrate()
+        
+        # Default XML element order
+        self.xml_order = [
+            'domain', 'overall', 'parallel', 'save', 'options', 
+            'microenvironment_setup', 'cell_definitions', 'initial_conditions', 
+            'cell_rules', 'user_parameters'
+        ]
+
+    def set_xml_order(self, order: List[str]) -> None:
+        """Set the order of top-level XML elements."""
+        self.xml_order = order
     
     @classmethod
     def from_xml(cls, filename: Union[str, Path]) -> 'PhysiCellConfig':
@@ -297,26 +308,7 @@ class PhysiCellConfig:
     # XML Generation
     # ===========================================
     
-    def generate_xml(self) -> str:
-        """Generate the complete XML configuration."""
-        # Ensure default substrate exists if no substrates are defined
-        self._add_default_substrate_if_needed()
-        
-        # Update all cell types to reflect current substrate configuration
-        # This must happen after substrate setup
-        for cell_type_name in self.cell_types.cell_types.keys():
-            self.cell_types._update_secretion_for_all_substrates(cell_type_name)
-        
-        # Create root element
-        root = ET.Element("PhysiCell_settings")
-        root.set("version", "devel-version")
-        
-        # Add elements in the correct order as per PhysiCell schema
-        
-        # 1. Domain
-        self.domain.add_to_xml(root)
-        
-        # 2. Overall settings
+    def _add_overall_settings(self, root: ET.Element) -> None:
         overall_elem = ET.SubElement(root, "overall")
         max_time_elem = ET.SubElement(overall_elem, "max_time", units="min")
         max_time_elem.text = str(self.options.options['max_time'])
@@ -335,31 +327,13 @@ class PhysiCellConfig:
         
         dt_phenotype_elem = ET.SubElement(overall_elem, "dt_phenotype", units="min")
         dt_phenotype_elem.text = str(self.options.options['dt_phenotype'])
-        
-        # 3. Parallel settings
+
+    def _add_parallel_settings(self, root: ET.Element) -> None:
         parallel_elem = ET.SubElement(root, "parallel")
         omp_num_threads_elem = ET.SubElement(parallel_elem, "omp_num_threads")
         omp_num_threads_elem.text = str(self.options.options['omp_num_threads'])
-        
-        # 4. Save options
-        self.save_options.add_to_xml(root)
-        
-        # 5. Options (moved here for correct order)
-        self.options.add_to_xml(root)
-        
-        # 6. Microenvironment (substrates)
-        self.substrates.add_to_xml(root)
-        
-        # 7. Cell definitions
-        self.cell_types.add_to_xml(root)
-        
-        # 8. Initial conditions
-        self.initial_conditions.add_to_xml(root)
-        
-        # 9. Cell rules
-        self.cell_rules.add_to_xml(root)
-        
-        # 10. User parameters
+
+    def _add_user_parameters(self, root: ET.Element) -> None:
         if self.user_parameters:
             user_params_elem = ET.SubElement(root, "user_parameters")
             for name, param in self.user_parameters.items():
@@ -368,11 +342,65 @@ class PhysiCellConfig:
                 param_elem.set("units", param['units'])
                 param_elem.set("description", param['description'])
                 param_elem.text = str(param['value'])
+
+    def generate_xml(self) -> str:
+        """Generate the complete XML configuration."""
+        # Ensure default substrate exists if no substrates are defined
+        self._add_default_substrate_if_needed()
+        
+        # Update all cell types to reflect current substrate configuration
+        # This must happen after substrate setup
+        for cell_type_name in self.cell_types.cell_types.keys():
+            self.cell_types._update_secretion_for_all_substrates(cell_type_name)
+        
+        # Create root element
+        root = ET.Element("PhysiCell_settings")
+        root.set("version", "devel-version")
+        
+        # Add elements in the correct order
+        for section in self.xml_order:
+            if section == 'domain':
+                self.domain.add_to_xml(root)
+            elif section == 'overall':
+                self._add_overall_settings(root)
+            elif section == 'parallel':
+                self._add_parallel_settings(root)
+            elif section == 'save':
+                self.save_options.add_to_xml(root)
+            elif section == 'options':
+                self.options.add_to_xml(root)
+            elif section == 'microenvironment_setup':
+                self.substrates.add_to_xml(root)
+            elif section == 'cell_definitions':
+                self.cell_types.add_to_xml(root)
+            elif section == 'initial_conditions':
+                self.initial_conditions.add_to_xml(root)
+            elif section == 'cell_rules':
+                self.cell_rules.add_to_xml(root)
+            elif section == 'user_parameters':
+                self._add_user_parameters(root)
         
         # Convert to pretty XML string
         rough_string = ET.tostring(root, 'unicode')
         reparsed = minidom.parseString(rough_string)
-        return reparsed.toprettyxml(indent="  ")
+        pretty_xml = reparsed.toprettyxml(indent="    ")
+        
+        # Remove XML declaration if present (to match PhysiCell examples)
+        if pretty_xml.startswith('<?xml'):
+            pretty_xml = pretty_xml.split('\n', 1)[1]
+            
+        # Add extra newlines between top-level elements to match PhysiCell style
+        # We iterate through the expected order and add newlines before sections (except the first one)
+        for i, section in enumerate(self.xml_order):
+            if i > 0:
+                # Most sections map directly to tag names
+                tag_name = section
+                
+                # Perform replacement for the opening tag with correct indentation
+                # This handles both <tag> and <tag ...>
+                pretty_xml = pretty_xml.replace(f'\n    <{tag_name}', f'\n\n    <{tag_name}')
+            
+        return pretty_xml
     
     def save_xml(self, filename: str) -> None:
         """Save the XML configuration to a file."""

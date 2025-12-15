@@ -2,6 +2,7 @@
 
 from typing import Dict, Any, List, Optional
 import xml.etree.ElementTree as ET
+import copy
 from .base import BaseModule
 
 
@@ -14,7 +15,8 @@ class SaveOptionsModule(BaseModule):
             'folder': './output',
             'full_data': {
                 'interval': 60.0,
-                'enable': True
+                'enable': True,
+                'settings_interval': None
             },
             'SVG': {
                 'interval': 60.0,
@@ -24,8 +26,8 @@ class SaveOptionsModule(BaseModule):
                     'limits': False,
                     'substrate': 'substrate',
                     'colormap': 'YlOrRd',
-                    'min_conc': 0,
-                    'max_conc': 1
+                    'min_conc': "",
+                    'max_conc': ""
                 },
                 'legend': {
                     'enabled': False,
@@ -122,6 +124,11 @@ class SaveOptionsModule(BaseModule):
         enable_elem = self._create_element(full_data_elem, "enable", 
                                          str(self.save_options['full_data']['enable']).lower())
         
+        settings_interval = self.save_options['full_data'].get('settings_interval')
+        if settings_interval is not None:
+            settings_elem = self._create_element(full_data_elem, "settings_interval", settings_interval)
+            settings_elem.set("units", "min")
+        
         # SVG
         svg_elem = self._create_element(save_elem, "SVG")
         
@@ -148,18 +155,18 @@ class SaveOptionsModule(BaseModule):
         
         self._create_element(plot_substrate_elem, "substrate", plot_opts['substrate'])
         
+        if plot_opts['min_conc'] is not None or plot_opts['min_conc'] == 0:
+            self._create_element(plot_substrate_elem, "min_conc", str(plot_opts['min_conc']))
+            
+        if plot_opts['max_conc'] is not None or plot_opts['max_conc'] == 0:
+            self._create_element(plot_substrate_elem, "max_conc", str(plot_opts['max_conc']))
+
         # Handle empty values properly for colormap, min_conc, max_conc
         if plot_opts['colormap']:
             self._create_element(plot_substrate_elem, "colormap", plot_opts['colormap'])
         else:
             # Create empty self-closing tag
             colormap_elem = ET.SubElement(plot_substrate_elem, "colormap")
-            
-        if plot_opts['min_conc'] is not None or plot_opts['min_conc'] == 0:
-            self._create_element(plot_substrate_elem, "min_conc", str(plot_opts['min_conc']))
-        
-        if plot_opts['max_conc'] is not None or plot_opts['max_conc'] == 0:
-            self._create_element(plot_substrate_elem, "max_conc", str(plot_opts['max_conc']))
         
         # Legacy data
         legacy_elem = self._create_element(save_elem, "legacy_data")
@@ -189,6 +196,10 @@ class SaveOptionsModule(BaseModule):
             enable_elem = full_data_elem.find('enable')
             if enable_elem is not None and enable_elem.text:
                 self.save_options['full_data']['enable'] = enable_elem.text.strip().lower() == 'true'
+            
+            settings_elem = full_data_elem.find('settings_interval')
+            if settings_elem is not None and settings_elem.text:
+                self.save_options['full_data']['settings_interval'] = float(settings_elem.text.strip())
                 
         # Parse SVG
         svg_elem = xml_element.find('SVG')
@@ -253,4 +264,4 @@ class SaveOptionsModule(BaseModule):
     
     def get_save_options(self) -> Dict[str, Any]:
         """Get all save options."""
-        return self.save_options.copy()
+        return copy.deepcopy(self.save_options)

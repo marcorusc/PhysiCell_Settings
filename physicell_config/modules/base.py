@@ -63,7 +63,12 @@ class BaseModule(ABC):
         ValueError
             If *value* is not greater than zero.
         """
-        if not isinstance(value, (int, float)) or value <= 0:
+        try:
+            f_val = float(value)
+        except (ValueError, TypeError):
+            raise ValueError(f"{name} must be a positive number, got {value}")
+            
+        if f_val <= 0:
             raise ValueError(f"{name} must be a positive number, got {value}")
     
     def _validate_non_negative_number(self, value: float, name: str) -> None:
@@ -74,7 +79,12 @@ class BaseModule(ABC):
         ValueError
             If *value* is negative.
         """
-        if not isinstance(value, (int, float)) or value < 0:
+        try:
+            f_val = float(value)
+        except (ValueError, TypeError):
+            raise ValueError(f"{name} must be a non-negative number, got {value}")
+            
+        if f_val < 0:
             raise ValueError(f"{name} must be a non-negative number, got {value}")
 
     def _validate_number_in_range(self, value: float, min_val: float, max_val: float, name: str) -> None:

@@ -94,18 +94,20 @@ class CellTypeModule(BaseModule):
             
             # If no substrates are explicitly defined, keep only the default 'substrate' entry
             if len(all_substrates) == 0:
-                # Clear all and add only 'substrate'
                 sensitivities.clear()
                 sensitivities['substrate'] = 0.0
             else:
-                # Remove the default 'substrate' entry if real substrates are defined
-                if 'substrate' in sensitivities:
-                    del sensitivities['substrate']
+                user_defined = any(name != 'substrate' for name in sensitivities.keys())
                 
-                # Add missing substrates with default sensitivity
-                for substrate_name in all_substrates.keys():
-                    if substrate_name not in sensitivities:
+                if not user_defined:
+                    # Replace placeholder with actual microenvironment substrates
+                    sensitivities.clear()
+                    for substrate_name in all_substrates.keys():
                         sensitivities[substrate_name] = 0.0
+                else:
+                    # User provided explicit substrates—remove placeholder if it still exists
+                    if 'substrate' in sensitivities:
+                        del sensitivities['substrate']
     
     def _default_phenotype(self) -> Dict[str, Any]:
         """Create default phenotype parameters."""
@@ -762,8 +764,16 @@ class CellTypeModule(BaseModule):
         custom_data_elem = self._create_element(parent, "custom_data")
         
         for key, value in custom_data.items():
-            if isinstance(value, dict):
-                # Handle nested dictionaries
+            if isinstance(value, dict) and 'value' in value:
+                elem = self._create_element(custom_data_elem, key, value.get('value', ""))
+                if 'units' in value:
+                    elem.set("units", str(value['units']))
+                if 'description' in value:
+                    elem.set("description", str(value['description']))
+                if 'conserved' in value:
+                    elem.set("conserved", str(value['conserved']).lower())
+            elif isinstance(value, dict):
+                # Handle nested dictionaries that do not follow the standard schema
                 nested_elem = self._create_element(custom_data_elem, key)
                 for sub_key, sub_value in value.items():
                     self._create_element(nested_elem, sub_key, sub_value)
@@ -889,23 +899,48 @@ class CellTypeModule(BaseModule):
             model_name = model_elem.get('name')
             if model_name and model_name in death_data:
                 # Parse rate
-                rate_elem = model_elem.find('rate')
+                rate_elem = model_elem.find('death_rate') or model_elem.find('rate')
                 if rate_elem is not None and rate_elem.text and rate_elem.text.strip():
                     try:
-                        death_data[model_name]['rate'] = float(rate_elem.text.strip())
+                        rate_value = float(rate_elem.text.strip())
+                        death_data[model_name]['default_rate'] = rate_value
                     except ValueError:
                         pass
                 
                 # Parse parameters
                 params_elem = model_elem.find('parameters')
                 if params_elem is not None:
+                    parameters = death_data[model_name].setdefault('parameters', {})
                     for param in params_elem:
                         param_name = param.tag
-                        if param.text and param.text.strip() and param_name in death_data[model_name]:
+                        if param.text and param.text.strip():
                             try:
-                                death_data[model_name][param_name] = float(param.text.strip())
+                                value = float(param.text.strip())
                             except ValueError:
-                                pass
+                                value = param.text.strip()
+                            if isinstance(parameters, dict):
+                                parameters[param_name] = value
+                            else:
+                                death_data[model_name][param_name] = value
+                
+                # Parse phase durations
+                phase_elem = model_elem.find('phase_durations')
+                if phase_elem is not None:
+                    durations = []
+                    for duration_elem in phase_elem.findall('duration'):
+                        try:
+                            duration_value = float(duration_elem.text.strip()) if duration_elem.text and duration_elem.text.strip() else 0.0
+                            index = int(duration_elem.get('index', 0))
+                            fixed = duration_elem.get('fixed_duration', 'false').lower() == 'true'
+                            durations.append({
+                                'index': index,
+                                'duration': duration_value,
+                                'fixed_duration': fixed
+                            })
+                        except ValueError:
+                            pass
+                    if durations:
+                        death_data[model_name]['phase_durations'] = durations
     
     def _parse_volume(self, volume_data: Dict[str, Any], volume_elem: ET.Element) -> None:
         """Parse volume parameters."""
@@ -981,18 +1016,52 @@ class CellTypeModule(BaseModule):
         custom_data = self.cell_types[cell_name]['custom_data']
         
         for var_elem in custom_data_elem:
-            var_name = var_elem.get('name')
-            if var_name and var_elem.text and var_elem.text.strip():
-                # Try to parse as number, fall back to string
-                try:
-                    value = float(var_elem.text.strip())
-                    # Convert to int if it's a whole number
-                    if value.is_integer():
-                        value = int(value)
-                except ValueError:
-                    value = var_elem.text.strip()
-                
-                custom_data[var_name] = value
+            var_name = var_elem.get('name', var_elem.tag)
+            if not var_name:
+                continue
+            
+            children = list(var_elem)
+            
+            # Support legacy nested structure (<sample><value>...</value>...</sample>)
+            if children:
+                legacy_data = {}
+                for child in children:
+                    if child.text and child.text.strip():
+                        legacy_data[child.tag] = child.text.strip()
+                if 'value' in legacy_data:
+                    value = self._convert_custom_value(legacy_data.get('value'))
+                    custom_data[var_name] = {
+                        'value': value,
+                        'units': legacy_data.get('units', 'dimensionless'),
+                        'description': legacy_data.get('description', ''),
+                        'conserved': legacy_data.get('conserved', 'false').lower() == 'true'
+                    }
+                    continue
+                # Unknown nested structure: store raw
+                custom_data[var_name] = legacy_data
+                continue
+            
+            value_text = var_elem.text.strip() if var_elem.text else ""
+            value = self._convert_custom_value(value_text)
+            conserved_attr = var_elem.get('conserved', 'false')
+            custom_data[var_name] = {
+                'value': value,
+                'units': var_elem.get('units', 'dimensionless'),
+                'description': var_elem.get('description', ''),
+                'conserved': conserved_attr.lower() in ('true', '1', 'yes')
+            }
+    
+    def _convert_custom_value(self, text: str) -> Any:
+        """Attempt to convert custom data value to int/float when possible."""
+        if text == "":
+            return ""
+        try:
+            value = float(text)
+            if value.is_integer():
+                return int(value)
+            return value
+        except ValueError:
+            return text
     
     def _parse_intracellular(self, phenotype_data: Dict[str, Any], intracellular_elem: ET.Element) -> None:
         """Parse intracellular/PhysiBOSS model configuration."""

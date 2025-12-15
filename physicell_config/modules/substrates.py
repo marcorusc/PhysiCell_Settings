@@ -2,6 +2,7 @@
 
 from typing import Dict, Any, List, Optional, Tuple
 import xml.etree.ElementTree as ET
+from copy import deepcopy
 from .base import BaseModule
 
 
@@ -12,10 +13,15 @@ class SubstrateModule(BaseModule):
         super().__init__(config)
         self.substrates = {}
         self.track_internalized_substrates = False
+        self.calculate_gradients = True
     
     def set_track_internalized_substrates(self, enabled: bool) -> None:
         """Set whether to track internalized substrates in each agent."""
         self.track_internalized_substrates = enabled
+    
+    def set_calculate_gradients(self, enabled: bool) -> None:
+        """Enable/disable gradient computation in the microenvironment."""
+        self.calculate_gradients = enabled
     
     def add_substrate(self, name: str, diffusion_coefficient: float = 1000.0,
                      decay_rate: float = 0.1, initial_condition: float = 0.0,
@@ -55,12 +61,12 @@ class SubstrateModule(BaseModule):
             'units': units,
             'initial_units': initial_units,
             'dirichlet_options': {
-                'xmin': {'enabled': False, 'value': 0.0},
-                'xmax': {'enabled': False, 'value': 0.0},
-                'ymin': {'enabled': False, 'value': 0.0},
-                'ymax': {'enabled': False, 'value': 0.0},
-                'zmin': {'enabled': False, 'value': 0.0},
-                'zmax': {'enabled': False, 'value': 0.0}
+                'xmin': {'enabled': False, 'value': ""},
+                'xmax': {'enabled': False, 'value': ""},
+                'ymin': {'enabled': False, 'value': ""},
+                'ymax': {'enabled': False, 'value': ""},
+                'zmin': {'enabled': False, 'value': ""},
+                'zmax': {'enabled': False, 'value': ""}
             }
         }
     
@@ -98,7 +104,12 @@ class SubstrateModule(BaseModule):
             # Physical parameters
             physical_elem = self._create_element(variable_elem, "physical_parameter_set")
             
-            if substrate['diffusion_coefficient'] > 0:
+            try:
+                diff_val = float(substrate['diffusion_coefficient'])
+            except (ValueError, TypeError):
+                diff_val = 0
+            
+            if diff_val > 0:
                 diff_elem = self._create_element(physical_elem, "diffusion_coefficient", 
                                                substrate['diffusion_coefficient'])
                 diff_elem.set("units", "micron^2/min")
@@ -129,7 +140,8 @@ class SubstrateModule(BaseModule):
         
         # Microenvironment options (always add these, even if no substrates)
         options_elem = self._create_element(microenv_elem, "options")
-        self._create_element(options_elem, "calculate_gradients", "true")
+        self._create_element(options_elem, "calculate_gradients", 
+                           str(self.calculate_gradients).lower())
         self._create_element(options_elem, "track_internalized_substrates_in_each_agent", 
                            "true" if self.track_internalized_substrates else "false")
         
@@ -236,6 +248,9 @@ class SubstrateModule(BaseModule):
         # Parse microenvironment options
         options = xml_element.find('options')
         if options is not None:
+            calc_elem = options.find('calculate_gradients')
+            if calc_elem is not None and calc_elem.text:
+                self.calculate_gradients = calc_elem.text.strip().lower() in ('true', '1', 'yes')
             track_elem = options.find('track_internalized_substrates_in_each_agent')
             if track_elem is not None and track_elem.text:
                 track_value = track_elem.text.lower()
@@ -243,4 +258,4 @@ class SubstrateModule(BaseModule):
     
     def get_substrates(self) -> Dict[str, Dict[str, Any]]:
         """Get all substrates."""
-        return self.substrates.copy()
+        return deepcopy(self.substrates)

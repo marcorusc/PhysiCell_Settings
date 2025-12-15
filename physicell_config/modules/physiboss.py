@@ -91,6 +91,31 @@ class PhysiBoSSModule(BaseModule):
         if inheritance_global is not None:
             settings['inheritance'] = {'global': inheritance_global}
     
+    def add_intracellular_initial_value(self, cell_type_name: str, intracellular_name: str, value: float) -> None:
+        """Set initial value for an intracellular node.
+        
+        Parameters
+        ----------
+        cell_type_name : str
+            Name of the cell type
+        intracellular_name : str
+            Name of the intracellular node
+        value : float
+            Initial value
+        """
+        cell_type = self._get_cell_type(cell_type_name)
+        
+        if 'intracellular' not in cell_type['phenotype']:
+            raise ValueError(f"No intracellular model configured for cell type '{cell_type_name}'")
+            
+        if 'initial_values' not in cell_type['phenotype']['intracellular']:
+            cell_type['phenotype']['intracellular']['initial_values'] = []
+            
+        cell_type['phenotype']['intracellular']['initial_values'].append({
+            'intracellular_name': intracellular_name,
+            'value': value
+        })
+
     def add_intracellular_input(self, cell_type_name: str, physicell_name: str, intracellular_name: str,
                                action: str = 'activation', threshold: float = 1, smoothing: int = 0) -> None:
         """Add an input mapping for the intracellular model.
