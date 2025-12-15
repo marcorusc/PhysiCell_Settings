@@ -7,7 +7,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from config_builder_modular import PhysiCellConfig
+from physicell_config import PhysiCellConfig
 
 def create_rules_config():
     """Create configuration with cell rules."""
@@ -19,8 +19,8 @@ def create_rules_config():
     config.domain.set_2D(True)
     
     # Overall settings  
-    config.options.set_max_time(1.0)
-    config.options.set_time_steps(dt_diffusion=0.01, dt_mechanics=0.1, dt_phenotype=6.0)
+    config.options.set_max_time(1)
+    config.options.set_time_steps(dt_diffusion=0.01, dt_mechanics=0.1, dt_phenotype=6)
     config.options.set_parallel_threads(1)
     config.options.set_random_seed(0)
     config.options.set_legacy_random_points(False)
@@ -29,20 +29,20 @@ def create_rules_config():
     
     # Save options
     config.save_options.set_output_folder('output')
-    config.save_options.set_full_data_options(interval=60.0, enable=True)
-    config.save_options.set_svg_options(interval=60.0, enable=True)
+    config.save_options.set_full_data_options(interval=60, enable=True)
+    config.save_options.set_svg_options(interval=60, enable=True)
     config.save_options.set_svg_plot_substrate(enabled=False, limits=False, 
                                               substrate='oxygen', colormap='', 
-                                              min_conc=0, max_conc=0)
+                                              min_conc="", max_conc="")
     config.save_options.set_legacy_data(False)
     
     # Add substrates
     substrates_data = [
-        ('oxygen', 100000.0, 0.1, 38, True, 38),
-        ('apoptotic debris', 1.0, 0.0, 0.0, False, 0.0),
-        ('necrotic debris', 1.0, 0.0, 0.0, False, 0.0),
-        ('pro-inflammatory factor', 10000.0, 1.0, 0.0, False, 0.0),
-        ('anti-inflammatory factor', 10000.0, 1.0, 0.0, False, 0.0)
+        ('oxygen', "100000.0", 0.1, 38, True, 38),
+        ('apoptotic debris', 1, 0, 0, False, 0),
+        ('necrotic debris', 1, 0, 0, False, 0),
+        ('pro-inflammatory factor', "10000.0", 1, 0, False, 0),
+        ('anti-inflammatory factor', "10000.0", 1, 0, False, 0)
     ]
     
     for name, diff_coeff, decay_rate, init_cond, dirichlet_enabled, dirichlet_val in substrates_data:
@@ -59,6 +59,10 @@ def create_rules_config():
             units=units,
             initial_units=init_units
         )
+        
+        if dirichlet_enabled:
+            for boundary in ['xmin', 'xmax', 'ymin', 'ymax', 'zmin', 'zmax']:
+                config.substrates.set_dirichlet_boundary(name, boundary, True, dirichlet_val)
         
         # Set specific boundary conditions for oxygen
         if name == 'oxygen':

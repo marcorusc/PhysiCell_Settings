@@ -7,11 +7,18 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from config_builder_modular import PhysiCellConfig
+from physicell_config import PhysiCellConfig
 
 def create_foxp3_config():
     """Create PhysiBoSS configuration with FOXP3 mutation."""
     config = PhysiCellConfig()
+    
+    # Set XML order to match target file
+    config.set_xml_order([
+        'cell_rules', 'domain', 'overall', 'parallel', 'save', 'options', 
+        'microenvironment_setup', 'cell_definitions', 'initial_conditions', 
+        'user_parameters'
+    ])
     
     # Cell rules first (should be at top of XML)
     config.cell_rules.add_ruleset('differentiation', 
@@ -25,8 +32,8 @@ def create_foxp3_config():
     config.domain.set_2D(True)
     
     # Overall settings
-    config.options.set_max_time(5000.0)
-    config.options.set_time_steps(dt_diffusion=0.01, dt_mechanics=0.1, dt_phenotype=6.0)
+    config.options.set_max_time(5000)
+    config.options.set_time_steps(dt_diffusion=0.01, dt_mechanics=0.1, dt_phenotype=6)
     config.options.set_parallel_threads(10)
     config.options.set_legacy_random_points(False)
     config.options.set_virtual_wall(True)
@@ -34,22 +41,22 @@ def create_foxp3_config():
     
     # Save options
     config.save_options.set_output_folder('output')
-    config.save_options.set_full_data_options(interval=30.0, enable=True)
-    config.save_options.set_svg_options(interval=30.0, enable=True)
+    config.save_options.set_full_data_options(interval=30, enable=True)
+    config.save_options.set_svg_options(interval=30, enable=True)
     config.save_options.set_svg_legend(enabled=True, cell_phase=False, cell_type=True)
     config.save_options.set_svg_plot_substrate(enabled=True, limits=False, 
                                               substrate='CCL21', colormap='original', 
-                                              min_conc=0.0, max_conc=0.1)
+                                              min_conc="0.0", max_conc=0.1)
     config.save_options.set_legacy_data(True)
     
     # Add CCL21 substrate
     config.substrates.add_substrate(
         name='CCL21',
-        diffusion_coefficient=1000.0,
+        diffusion_coefficient="1000.0",
         decay_rate=0.005,
-        initial_condition=0.0,
+        initial_condition="0.0",
         dirichlet_enabled=False,
-        dirichlet_value=0.0,
+        dirichlet_value="0.0",
         units='dimensionless',
         initial_units='mmHg'
     )
@@ -59,7 +66,7 @@ def create_foxp3_config():
     
     # Set all boundary values to disabled, 0.0
     for boundary in ['xmin', 'xmax', 'ymin', 'ymax', 'zmin', 'zmax']:
-        config.substrates.set_dirichlet_boundary('CCL21', boundary, False, 0.0)
+        config.substrates.set_dirichlet_boundary('CCL21', boundary, False, "0.0")
     
     # Add cell types
     cell_types_data = [
@@ -82,6 +89,12 @@ def create_foxp3_config():
         config.cell_types.cell_types[name]['phenotype']['cycle']['name'] = 'live'
         config.cell_types.set_death_rate(name, 'apoptosis', 0.0)
         config.cell_types.set_death_rate(name, 'necrosis', 0.0)
+        
+        # Override death parameters to match string format
+        # Apoptosis
+        config.cell_types.cell_types[name]['phenotype']['death']['apoptosis']['parameters']['cytoplasmic_biomass_change_rate'] = "1.66667e-02"
+        # Necrosis
+        config.cell_types.cell_types[name]['phenotype']['death']['necrosis']['parameters']['cytoplasmic_biomass_change_rate'] = "5.33333e-5"
         
         # Volume parameters (same for all cell types)
         config.cell_types.set_volume_parameters(name, total=2494, nuclear=540, fluid_fraction=0.75)
@@ -133,15 +146,15 @@ def create_foxp3_config():
     }
     
     # Add T0 intracellular model
-    config.cell_types.add_intracellular_model('T0', 'maboss',
+    config.physiboss.add_intracellular_model('T0', 'maboss',
                                              'config/differentiation/boolean_network/tcell_corral.bnd',
                                              'config/differentiation/boolean_network/tcell_corral.cfg')
     
-    config.cell_types.set_intracellular_settings('T0', intracellular_dt=6.0, time_stochasticity=0, 
+    config.physiboss.set_intracellular_settings('T0', intracellular_dt=6.0, time_stochasticity=0, 
                                                  scaling=1.0, start_time=0.0, inheritance_global=False)
     
     # Add mutation for FOXP3_2
-    config.cell_types.add_intracellular_mutation('T0', 'FOXP3_2', 0)
+    config.physiboss.add_intracellular_mutation('T0', 'FOXP3_2', 0)
     
     # Add input mappings for T0
     inputs = [
@@ -157,7 +170,7 @@ def create_foxp3_config():
     ]
     
     for physicell_name, intracellular_name in inputs:
-        config.cell_types.add_intracellular_input('T0', physicell_name, intracellular_name)
+        config.physiboss.add_intracellular_input('T0', physicell_name, intracellular_name)
     
     # Add output mappings for T0
     outputs = [
@@ -167,7 +180,7 @@ def create_foxp3_config():
     ]
     
     for physicell_name, intracellular_name in outputs:
-        config.cell_types.add_intracellular_output('T0', physicell_name, intracellular_name)
+        config.physiboss.add_intracellular_output('T0', physicell_name, intracellular_name)
     
     # Configure other cell types with simpler parameters
     for name in ['Treg', 'Th1', 'Th17']:
@@ -179,16 +192,16 @@ def create_foxp3_config():
     config.cell_types.cell_types['dendritic_cell']['phenotype']['motility']['migration_bias'] = 0.8
     
     # Add dendritic cell intracellular model
-    config.cell_types.add_intracellular_model('dendritic_cell', 'maboss',
+    config.physiboss.add_intracellular_model('dendritic_cell', 'maboss',
                                              'config/differentiation/boolean_network/dendritic_cells.bnd',
                                              'config/differentiation/boolean_network/dendritic_cells.cfg')
     
-    config.cell_types.set_intracellular_settings('dendritic_cell', intracellular_dt=6.0, 
+    config.physiboss.set_intracellular_settings('dendritic_cell', intracellular_dt=6.0, 
                                                  time_stochasticity=0, scaling=30.0, 
                                                  start_time=0.0, inheritance_global=False)
     
     # Add initial value for dendritic cell
-    config.cell_types.add_intracellular_initial_value('dendritic_cell', 'Maturation', 1.0)
+    config.physiboss.add_intracellular_initial_value('dendritic_cell', 'Maturation', 1.0)
     
     # Add input mappings for dendritic cell
     dc_inputs = [
@@ -197,7 +210,7 @@ def create_foxp3_config():
     ]
     
     for physicell_name, intracellular_name, threshold, smoothing in dc_inputs:
-        config.cell_types.add_intracellular_input('dendritic_cell', physicell_name, intracellular_name,
+        config.physiboss.add_intracellular_input('dendritic_cell', physicell_name, intracellular_name,
                                                  threshold=threshold, smoothing=smoothing)
     
     # Add output mappings for dendritic cell
@@ -207,7 +220,7 @@ def create_foxp3_config():
     ]
     
     for physicell_name, intracellular_name, value, base_value in dc_outputs:
-        config.cell_types.add_intracellular_output('dendritic_cell', physicell_name, intracellular_name,
+        config.physiboss.add_intracellular_output('dendritic_cell', physicell_name, intracellular_name,
                                                   value=value, base_value=base_value)
     
     # Endothelial cell - different attachment properties
