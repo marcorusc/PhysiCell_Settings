@@ -127,7 +127,7 @@ class PhysiCellConfig:
         loader = XMLLoader(self)
         loader.load_from_file(filename)
     
-    def validate_xml_file(self, filename: Union[str, Path]) -> tuple[bool, str]:
+    def validate_xml_file(self, filename: Union[str, Path]) -> Tuple[bool, str]:
         """Validate that an XML file is a valid PhysiCell configuration.
         
         Args:

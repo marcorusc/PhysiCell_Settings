@@ -5,7 +5,7 @@ configuration files and loading them into PhysiCellConfig instances.
 """
 
 import xml.etree.ElementTree as ET
-from typing import Dict, Any, Optional, Union
+from typing import Dict, Any, Optional, Union, Tuple
 from pathlib import Path
 import logging
 
@@ -43,7 +43,7 @@ class XMLLoader:
         self.config = config_instance
         self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     
-    def validate_physicell_xml(self, xml_file_path: Union[str, Path]) -> tuple[bool, str]:
+    def validate_physicell_xml(self, xml_file_path: Union[str, Path]) -> Tuple[bool, str]:
         """
         Validate that an XML file is a valid PhysiCell configuration file.
         

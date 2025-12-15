@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.6] - 2025-12-15
+
+### Fixed
+- Fixed `TypeError: 'type' object is not subscriptable` in Python 3.8 by replacing `tuple[...]` with `Tuple[...]`.
+
 ## [0.3.5] - 2025-12-15
 
 ### Added
