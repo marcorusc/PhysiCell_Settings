@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="physicell-settings",
-    version="0.3.6",  # Fixed Python 3.8 compatibility
+    version="0.4.5",  # Bumped to supersede PyPI versions
     author="Marco Ruscone",
     author_email="ym.ruscone94@gmail.com",
     description="User-friendly Python package for generating PhysiCell_settings.xml configuration files",
