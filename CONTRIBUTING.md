@@ -270,6 +270,44 @@ Contributors will be:
 - **GitHub Issues** - For bugs and feature requests
 - **Code review** - Maintainers will provide feedback on PRs
 
+## 📦 Release Process (For Maintainers)
+
+This project uses automated GitHub Actions workflows for testing and deployment to PyPI.
+
+### Creating a New Release
+
+1. **Update version number** in `setup.py`:
+   ```python
+   version="0.3.5",  # Update to new version
+   ```
+
+2. **Update CHANGELOG.md** with release notes
+
+3. **Commit and push changes**:
+   ```bash
+   git add setup.py CHANGELOG.md
+   git commit -m "Bump version to 0.3.5"
+   git push
+   ```
+
+4. **Create and push a version tag**:
+   ```bash
+   git tag -a v0.3.5 -m "Release version 0.3.5"
+   git push origin v0.3.5
+   ```
+
+### Automated Deployment Workflow
+
+When a version tag (e.g., `v0.3.5`) is pushed:
+
+1. **Test Job** - Package is tested on Python 3.8, 3.9, 3.10, 3.11, and 3.12
+2. **Build Job** - Distribution packages (sdist and wheel) are built and validated
+3. **Publish Job** - Package is automatically published to PyPI (if all tests pass)
+
+**Note**: The `PYPI_API_TOKEN` secret must be configured in the repository settings for deployment to work.
+
+For more details, see [`.github/workflows/README.md`](.github/workflows/README.md).
+
 ## 🙏 Thank You
 
 Every contribution helps make this tool better for the PhysiCell community. Whether it's:

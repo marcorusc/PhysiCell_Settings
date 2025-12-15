@@ -5,6 +5,25 @@ All notable changes to the PhysiCell Configuration Builder will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### 🚀 Infrastructure
+
+#### Added
+- **GitHub Actions Workflow for PyPI Deployment**
+  - Automated testing on Python 3.8, 3.9, 3.10, 3.11, and 3.12
+  - Automated package building (source distribution and wheel)
+  - Automated deployment to PyPI when version tags are pushed
+  - Comprehensive workflow documentation in `.github/workflows/README.md`
+  - Release process documentation in `CONTRIBUTING.md`
+
+#### Enhanced
+- **CI/CD Pipeline**
+  - All tests must pass before building
+  - Build must succeed before publishing
+  - Streamlined release process with git tags
+  - Better quality assurance for releases
+
 ## [0.1.4] - 2025-07-02
 
 ### ✨ New Features
