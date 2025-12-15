@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="physicell-settings",
-    version="0.3.4",  # Added automatic number_of_cells user parameter
+    version="0.3.5",  # Improved XML generation to match legacy format
     author="Marco Ruscone",
     author_email="ym.ruscone94@gmail.com",
     description="User-friendly Python package for generating PhysiCell_settings.xml configuration files",

@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.5] - 2025-12-15
+
+### Added
+- Strict validation script (`validate_configs.py`) to ensure generated XMLs match legacy PhysiCell format byte-for-byte.
+- `set_xml_order` method in `PhysiCellConfig` to allow custom ordering of top-level XML tags.
+
+### Changed
+- Improved XML generation to match legacy PhysiCell formatting:
+  - Integers are now formatted as `1` instead of `1.0` where appropriate.
+  - Added support for custom tag ordering.
+  - Improved whitespace handling to match PhysiCell's C++ XML writer.
+- Updated example generator scripts (`generate_basic.py`, `generate_foxp3.py`, `generate_rules.py`) to produce identical output to reference XMLs.
+
 ### 🚀 Infrastructure
 
 #### Added
