@@ -322,14 +322,28 @@ class PhysiBoSSModule(BaseModule):
                             self._create_element(settings_elem, "smoothing", out_settings['smoothing'])
 
     def load_from_xml(self, xml_element: Optional[ET.Element]) -> None:
-        """Load PhysiBoSS configuration from XML element.
-        
+        """Load PhysiBoSS configuration from a cell_definitions XML element.
+
+        Detailed per-cell intracellular data is parsed by
+        ``CellTypeModule.load_from_xml()``; this method only updates the
+        top-level ``enabled`` flag so that :meth:`is_enabled` stays
+        consistent when the module is interrogated before cell-type loading
+        completes.
+
         Args:
-            xml_element: XML element containing intracellular configuration, or None if missing
+            xml_element: ``cell_definitions`` XML element, or ``None`` if
+                the section is absent.
         """
-        # TODO: Implement PhysiBoSS XML loading in Phase 2
-        # For now, keep existing defaults
-        pass
+        if xml_element is None:
+            return
+
+        # Enable PhysiBoSS if at least one cell definition has an
+        # intracellular sub-element inside its phenotype.
+        for cell_def in xml_element.findall('cell_definition'):
+            phenotype = cell_def.find('phenotype')
+            if phenotype is not None and phenotype.find('intracellular') is not None:
+                self.enabled = True
+                return
 
     def is_enabled(self) -> bool:
         """Check if PhysiBoSS is enabled.
