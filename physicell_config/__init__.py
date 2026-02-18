@@ -11,7 +11,7 @@ __author__ = "Marco Ruscone"
 __email__ = "m.ruscone94@gmail.com"
 
 from .config_builder_modular import PhysiCellConfig
-__license__ = "MIT"
+__license__ = "GPL-3.0"
 __url__ = "https://github.com/mruscone/PhysiCell_Settings"
 
 __all__ = ["PhysiCellConfig"]
