@@ -128,14 +128,14 @@ class SubstrateModule(BaseModule):
             boundary_elem = self._create_element(variable_elem, "Dirichlet_boundary_condition", 
                                                substrate['dirichlet_value'])
             boundary_elem.set("units", substrate['initial_units'])
-            boundary_elem.set("enabled", "True" if substrate['dirichlet_enabled'] else "False")
+            boundary_elem.set("enabled", "true" if substrate['dirichlet_enabled'] else "false")
             
             # Dirichlet options (boundary-specific settings)
             dirichlet_opts_elem = self._create_element(variable_elem, "Dirichlet_options")
             for boundary_id, boundary_data in substrate['dirichlet_options'].items():
                 boundary_value_elem = ET.SubElement(dirichlet_opts_elem, "boundary_value")
                 boundary_value_elem.set("ID", boundary_id)
-                boundary_value_elem.set("enabled", "True" if boundary_data['enabled'] else "False")
+                boundary_value_elem.set("enabled", "true" if boundary_data['enabled'] else "false")
                 boundary_value_elem.text = str(boundary_data['value'])
         
         # Microenvironment options (always add these, even if no substrates)
