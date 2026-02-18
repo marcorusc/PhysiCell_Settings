@@ -22,6 +22,7 @@ This is the refactored version that uses composition with nested module objects
 to provide a clean interface while organizing code into manageable modules.
 """
 
+import re
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
 from typing import Dict, Any, List, Optional, Tuple, Union
@@ -352,6 +353,9 @@ class PhysiCellConfig:
         # This must happen after substrate setup
         for cell_type_name in self.cell_types.cell_types.keys():
             self.cell_types._update_secretion_for_all_substrates(cell_type_name)
+
+        # Populate interaction/transformation rates for all defined cell types
+        self.cell_types.update_all_cell_types_for_interactions()
         
         # Create root element
         root = ET.Element("PhysiCell_settings")
@@ -384,22 +388,29 @@ class PhysiCellConfig:
         rough_string = ET.tostring(root, 'unicode')
         reparsed = minidom.parseString(rough_string)
         pretty_xml = reparsed.toprettyxml(indent="    ")
-        
+
         # Remove XML declaration if present (to match PhysiCell examples)
         if pretty_xml.startswith('<?xml'):
             pretty_xml = pretty_xml.split('\n', 1)[1]
-            
+
+        # Add blank line after root element opening tag (PhysiCell style)
+        first_newline = pretty_xml.index('\n')
+        pretty_xml = pretty_xml[:first_newline + 1] + '\n' + pretty_xml[first_newline + 1:]
+
         # Add extra newlines between top-level elements to match PhysiCell style
         # We iterate through the expected order and add newlines before sections (except the first one)
         for i, section in enumerate(self.xml_order):
             if i > 0:
                 # Most sections map directly to tag names
                 tag_name = section
-                
+
                 # Perform replacement for the opening tag with correct indentation
                 # This handles both <tag> and <tag ...>
                 pretty_xml = pretty_xml.replace(f'\n    <{tag_name}', f'\n\n    <{tag_name}')
-            
+
+        # Add space before /> in self-closing tags to match PhysiCell style
+        pretty_xml = re.sub(r'(?<! )/>', ' />', pretty_xml)
+
         return pretty_xml
     
     def save_xml(self, filename: str) -> None:
