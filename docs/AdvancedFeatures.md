@@ -114,7 +114,7 @@ available signals and behaviors. Key calls include:
 - `get_available_signals(filter_by_type=None)`
 - `get_available_behaviors(filter_by_type=None)`
 - `get_context()` – inspect current cell types, substrates and custom variables
-- `add_rule(cell_type, signal, direction, behavior, base_value, half_max,
+- `add_rule(cell_type, signal, direction, behavior, saturation_value, half_max,
   hill_power, apply_to_dead)`
 - `generate_csv(filename)` – produce a CSV ready for PhysiCell
 

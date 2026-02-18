@@ -28,7 +28,7 @@ class CellRulesCSV(BaseModule):
 
     The CSV format produced is::
 
-        cell_type,signal,direction,behavior,base_value,half_max,hill_power,apply_to_dead
+        cell_type,signal,direction,behavior,saturation_value,half_max,hill_power,apply_to_dead
     """
     
     def __init__(self, config_instance=None):
@@ -236,71 +236,72 @@ class CellRulesCSV(BaseModule):
         return False
     
     def add_rule(self, cell_type: str, signal: str, direction: str, behavior: str,
-                base_value: float, half_max: float, hill_power: float, 
+                saturation_value: float, half_max: float, hill_power: float,
                 apply_to_dead: int) -> None:
         """
         Add a cell rule following the exact CSV format.
-        
+
         Args:
             cell_type: Name of the cell type
             signal: Signal name (e.g., 'oxygen', 'contact with tumor')
             direction: 'increases' or 'decreases'
             behavior: Behavior name (e.g., 'cycle entry', 'apoptosis')
-            base_value: Base value for the rule
-            half_max: Half-maximum value
+            saturation_value: Value of the behavior when the signal is at saturation
+            half_max: Half-maximum value (signal value at which behavior is halfway
+                between its base value and saturation value)
             hill_power: Hill power coefficient
             apply_to_dead: Whether to apply to dead cells (0 or 1)
         """
         # Validate inputs
-        self._validate_rule(cell_type, signal, direction, behavior, 
-                          base_value, half_max, hill_power, apply_to_dead)
-        
+        self._validate_rule(cell_type, signal, direction, behavior,
+                          saturation_value, half_max, hill_power, apply_to_dead)
+
         # Add the rule
         rule = {
             'cell_type': cell_type,
             'signal': signal,
             'direction': direction,
             'behavior': behavior,
-            'base_value': base_value,
+            'saturation_value': saturation_value,
             'half_max': half_max,
             'hill_power': hill_power,
             'apply_to_dead': apply_to_dead
         }
-        
+
         self.rules.append(rule)
     
     def _validate_rule(self, cell_type: str, signal: str, direction: str, behavior: str,
-                      base_value: float, half_max: float, hill_power: float, 
+                      saturation_value: float, half_max: float, hill_power: float,
                       apply_to_dead: int) -> None:
         """Validate a rule's parameters."""
         # Check direction
         if direction not in self.signals_behaviors['directions']:
             raise ValueError(f"Invalid direction '{direction}'. Must be one of: {self.signals_behaviors['directions']}")
-        
+
         # Check apply_to_dead
         if apply_to_dead not in [0, 1]:
             raise ValueError(f"Invalid apply_to_dead value '{apply_to_dead}'. Must be 0 or 1")
-        
+
         # Check if signal is valid (either in registry or valid in context)
         if not self._is_valid_context_signal(signal):
             print(f"Warning: Signal '{signal}' not recognized. Make sure it's a valid PhysiCell signal or matches your context.")
-        
+
         # Check if behavior is valid (either in registry or valid in context)
         if not self._is_valid_context_behavior(behavior):
             print(f"Warning: Behavior '{behavior}' not recognized. Make sure it's a valid PhysiCell behavior or matches your context.")
-        
+
         # Check cell type availability
         available_cell_types = self.signals_behaviors['context']['cell_types']
         if available_cell_types and cell_type not in available_cell_types:
             print(f"Warning: Cell type '{cell_type}' not found in current context. Available: {available_cell_types}")
-        
+
         # Validate numeric parameters
         try:
-            float(base_value)
+            float(saturation_value)
             float(half_max)
             float(hill_power)
         except (ValueError, TypeError):
-            raise ValueError("base_value, half_max, and hill_power must be numeric")
+            raise ValueError("saturation_value, half_max, and hill_power must be numeric")
     
     def remove_rule(self, index: int) -> None:
         """
@@ -351,9 +352,9 @@ class CellRulesCSV(BaseModule):
                 row = [
                     rule['cell_type'],
                     rule['signal'],
-                    rule['direction'], 
+                    rule['direction'],
                     rule['behavior'],
-                    rule['base_value'],
+                    rule['saturation_value'],
                     rule['half_max'],
                     rule['hill_power'],
                     rule['apply_to_dead']
@@ -375,8 +376,8 @@ class CellRulesCSV(BaseModule):
         for i, rule in enumerate(self.rules):
             try:
                 self._validate_rule(
-                    rule['cell_type'], rule['signal'], rule['direction'], 
-                    rule['behavior'], rule['base_value'], rule['half_max'], 
+                    rule['cell_type'], rule['signal'], rule['direction'],
+                    rule['behavior'], rule['saturation_value'], rule['half_max'],
                     rule['hill_power'], rule['apply_to_dead']
                 )
             except ValueError as e:
@@ -426,12 +427,12 @@ class CellRulesCSV(BaseModule):
         
         print(f"\nCurrent Rules ({len(self.rules)} total):")
         print("-" * 80)
-        print(f"{'#':<3} {'Cell Type':<20} {'Signal':<20} {'Dir':<9} {'Behavior':<20} {'Base':<8} {'Half':<8} {'Hill':<5} {'Dead':<4}")
+        print(f"{'#':<3} {'Cell Type':<20} {'Signal':<20} {'Dir':<9} {'Behavior':<20} {'Sat':<8} {'Half':<8} {'Hill':<5} {'Dead':<4}")
         print("-" * 80)
-        
+
         for i, rule in enumerate(self.rules):
             print(f"{i:<3} {rule['cell_type']:<20} {rule['signal']:<20} {rule['direction']:<9} "
-                  f"{rule['behavior']:<20} {rule['base_value']:<8} {rule['half_max']:<8} "
+                  f"{rule['behavior']:<20} {rule['saturation_value']:<8} {rule['half_max']:<8} "
                   f"{rule['hill_power']:<5} {rule['apply_to_dead']:<4}")
     
     def add_to_xml(self, parent) -> None:

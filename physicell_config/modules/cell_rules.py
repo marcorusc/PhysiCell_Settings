@@ -41,73 +41,105 @@ class CellRulesModule(BaseModule):
             'format': 'csv'
         }
     
-    def add_rule(self, signal: str, behavior: str, cell_type: str,
-                min_signal: float = 0.0, max_signal: float = 1.0,
-                min_behavior: float = 0.0, max_behavior: float = 1.0,
-                hill_power: float = 1.0, half_max: float = 0.5,
-                applies_to_dead: bool = False) -> None:
+    def add_rule(self, cell_type: str, signal: str, direction: str,
+                behavior: str, saturation_value: float = 0.0,
+                half_max: float = 0.5, hill_power: float = 4.0,
+                apply_to_dead: int = 0) -> None:
         """Add a single rule to ``cell_rules``.
+
+        The rule follows the PhysiCell CBHG v3.0 CSV format:
+        ``cell_type, signal, direction, behavior, saturation_value, half_max, hill_power, apply_to_dead``
 
         Parameters
         ----------
-        signal, behavior, cell_type:
-            Entities involved in the rule definition.
-        min_signal, max_signal:
-            Signal range that triggers the behaviour.
-        min_behavior, max_behavior:
-            Bounds for the resulting behaviour value.
-        hill_power, half_max:
-            Parameters of the Hill function controlling the response.
-        applies_to_dead:
-            Set to ``True`` if the rule should be evaluated for dead cells.
+        cell_type:
+            Name of the cell type this rule applies to.
+        signal:
+            Signal that triggers the behavior (e.g., ``'oxygen'``,
+            ``'contact with tumor'``).
+        direction:
+            ``'increases'`` or ``'decreases'`` — how the signal affects
+            the behavior.
+        behavior:
+            The behavior being modulated (e.g., ``'cycle entry'``,
+            ``'apoptosis'``, ``'migration speed'``).
+        saturation_value:
+            Value of the behavior when the signal is at saturation.
+        half_max:
+            Signal value at which the behavior is halfway between its
+            base value and the saturation value.
+        hill_power:
+            Exponent of the Hill function controlling the response curve.
+        apply_to_dead:
+            ``1`` if the rule should be evaluated for dead cells, ``0``
+            otherwise.
         """
+        if direction not in ('increases', 'decreases'):
+            raise ValueError(
+                f"Invalid direction '{direction}'. Must be 'increases' or 'decreases'")
+        if apply_to_dead not in (0, 1):
+            raise ValueError(
+                f"Invalid apply_to_dead value '{apply_to_dead}'. Must be 0 or 1")
         rule = {
-            'signal': signal,
-            'behavior': behavior,
             'cell_type': cell_type,
-            'min_signal': min_signal,
-            'max_signal': max_signal,
-            'min_behavior': min_behavior,
-            'max_behavior': max_behavior,
-            'hill_power': hill_power,
+            'signal': signal,
+            'direction': direction,
+            'behavior': behavior,
+            'saturation_value': saturation_value,
             'half_max': half_max,
-            'applies_to_dead': applies_to_dead
+            'hill_power': hill_power,
+            'apply_to_dead': apply_to_dead
         }
         self.rules.append(rule)
     
     def load_rules_from_csv(self, filename: str) -> None:
-        """Read rule definitions from an external CSV file.
+        """Read rule definitions from a PhysiCell rules CSV file.
+
+        The CSV is expected to have **no header row** and follow the
+        CBHG v3.0 column order::
+
+            cell_type,signal,direction,behavior,saturation_value,half_max,hill_power,apply_to_dead
 
         Parameters
         ----------
         filename:
-            Path to the CSV file produced by tools such as :class:`CellRulesCSV`.
+            Path to the CSV file (e.g., produced by :class:`CellRulesCSV`).
         """
         try:
             with open(filename, 'r', newline='') as csvfile:
-                reader = csv.DictReader(csvfile)
+                reader = csv.reader(csvfile)
                 for row in reader:
-                    # Convert string values to appropriate types
+                    # Skip empty lines
+                    if not row or all(c.strip() == '' for c in row):
+                        continue
+                    if len(row) < 8:
+                        raise ValueError(
+                            f"Expected 8 columns but got {len(row)}: {row}")
                     rule = {
-                        'signal': row.get('signal', ''),
-                        'behavior': row.get('behavior', ''),
-                        'cell_type': row.get('cell_type', ''),
-                        'min_signal': float(row.get('min_signal', 0.0)),
-                        'max_signal': float(row.get('max_signal', 1.0)),
-                        'min_behavior': float(row.get('min_behavior', 0.0)),
-                        'max_behavior': float(row.get('max_behavior', 1.0)),
-                        'hill_power': float(row.get('hill_power', 1.0)),
-                        'half_max': float(row.get('half_max', 0.5)),
-                        'applies_to_dead': row.get('applies_to_dead', 'false').lower() == 'true'
+                        'cell_type': row[0].strip(),
+                        'signal': row[1].strip(),
+                        'direction': row[2].strip(),
+                        'behavior': row[3].strip(),
+                        'saturation_value': float(row[4]),
+                        'half_max': float(row[5]),
+                        'hill_power': float(row[6]),
+                        'apply_to_dead': int(row[7])
                     }
                     self.rules.append(rule)
         except FileNotFoundError:
             raise FileNotFoundError(f"Rules file '{filename}' not found")
+        except ValueError:
+            raise
         except Exception as e:
             raise ValueError(f"Error loading rules from '{filename}': {str(e)}")
     
     def save_rules_to_csv(self, filename: str) -> None:
-        """Write all currently stored rules to a CSV file.
+        """Write all currently stored rules to a PhysiCell-compatible CSV file.
+
+        The output has **no header row** and follows the CBHG v3.0 column
+        order::
+
+            cell_type,signal,direction,behavior,saturation_value,half_max,hill_power,apply_to_dead
 
         Parameters
         ----------
@@ -116,16 +148,22 @@ class CellRulesModule(BaseModule):
         """
         if not self.rules:
             raise ValueError("No rules to save")
-        
-        fieldnames = ['signal', 'behavior', 'cell_type', 'min_signal', 'max_signal',
-                     'min_behavior', 'max_behavior', 'hill_power', 'half_max', 'applies_to_dead']
-        
+
         try:
+            os.makedirs(os.path.dirname(filename) if os.path.dirname(filename) else '.', exist_ok=True)
             with open(filename, 'w', newline='') as csvfile:
-                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-                writer.writeheader()
+                writer = csv.writer(csvfile)
                 for rule in self.rules:
-                    writer.writerow(rule)
+                    writer.writerow([
+                        rule['cell_type'],
+                        rule['signal'],
+                        rule['direction'],
+                        rule['behavior'],
+                        rule['saturation_value'],
+                        rule['half_max'],
+                        rule['hill_power'],
+                        rule['apply_to_dead']
+                    ])
         except Exception as e:
             raise ValueError(f"Error saving rules to '{filename}': {str(e)}")
     
@@ -163,7 +201,10 @@ class CellRulesModule(BaseModule):
             
             self._create_element(ruleset_elem, "folder", "./config")
             self._create_element(ruleset_elem, "filename", "cell_rules.csv")
-    
+
+        # Add settings element (required by PhysiCell)
+        self._create_element(cell_rules_elem, "settings")
+
     def load_from_xml(self, xml_element: Optional[ET.Element]) -> None:
         """Load cell rules configuration from XML element.
         

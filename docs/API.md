@@ -53,8 +53,8 @@ Handles phenotype and behavioral properties for all cell types.
 
 ### CellRulesModule
 - `add_ruleset(name, folder='./config', filename='rules.csv', enabled=True)` – declare a CSV ruleset to load during simulation.
-- `add_rule(signal, behavior, cell_type, min_signal=0.0, max_signal=1.0, min_behavior=0.0, max_behavior=1.0, hill_power=1.0, half_max=0.5, applies_to_dead=False)` – add an individual rule description.
-- `load_rules_from_csv(filename)` / `save_rules_to_csv(filename)` – import or export rules in CSV format.
+- `add_rule(cell_type, signal, direction, behavior, saturation_value=0.0, half_max=0.5, hill_power=4.0, apply_to_dead=0)` – add a rule following the CBHG v3.0 CSV format.
+- `load_rules_from_csv(filename)` / `save_rules_to_csv(filename)` – import or export rules in headerless PhysiCell CSV format.
 - `add_to_xml(parent)` – write the cell rules structure to XML.
 - `get_rules()` / `get_rulesets()` – return defined rules and rulesets.
 
@@ -62,7 +62,7 @@ Handles phenotype and behavioral properties for all cell types.
 Utility class for creating valid `cell_rules.csv` files.
 - Methods to list available signals/behaviors (`get_available_signals`, `get_available_behaviors`).
 - Context helpers (`update_context_from_config`, `get_context`).
-- `add_rule(cell_type, signal, direction, behavior, base_value, half_max, hill_power, apply_to_dead)` – add a rule in CSV layout and `generate_csv(filename)` to export.
+- `add_rule(cell_type, signal, direction, behavior, saturation_value, half_max, hill_power, apply_to_dead)` – add a rule in CSV layout and `generate_csv(filename)` to export.
 - Includes convenience `print_*` methods to display registry information.
 
 ### OptionsModule
@@ -151,9 +151,9 @@ Below is a complete list of public helpers available in each module.
 
 ### CellRulesModule
 - `add_ruleset(name, folder='./config', filename='rules.csv', enabled=True)` – register a CSV ruleset file.
-- `add_rule(signal, behavior, cell_type, min_signal=0.0, max_signal=1.0, min_behavior=0.0, max_behavior=1.0, hill_power=1.0, half_max=0.5, applies_to_dead=False)` – store a rule description.
-- `load_rules_from_csv(filename)` – import rules from CSV.
-- `save_rules_to_csv(filename)` – export current rules to CSV.
+- `add_rule(cell_type, signal, direction, behavior, saturation_value=0.0, half_max=0.5, hill_power=4.0, apply_to_dead=0)` – store a rule following the CBHG v3.0 format.
+- `load_rules_from_csv(filename)` – import rules from a headerless PhysiCell CSV.
+- `save_rules_to_csv(filename)` – export current rules to headerless PhysiCell CSV.
 - `add_to_xml(parent)` – write the cell rules section.
 - `get_rules()` – list rule dictionaries.
 - `get_rulesets()` – list registered rulesets.
@@ -167,7 +167,7 @@ Below is a complete list of public helpers available in each module.
 - `get_context()` – inspect current context.
 - `get_signal_by_name(signal_name)` – look up a signal by name.
 - `get_behavior_by_name(behavior_name)` – look up a behavior by name.
-- `add_rule(cell_type, signal, direction, behavior, base_value, half_max, hill_power, apply_to_dead)` – append a CSV rule.
+- `add_rule(cell_type, signal, direction, behavior, saturation_value, half_max, hill_power, apply_to_dead)` – append a CSV rule.
 - `remove_rule(index)` – delete a rule by index.
 - `get_rules()` – list stored rules.
 - `clear_rules()` – remove all rules.
