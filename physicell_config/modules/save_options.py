@@ -154,19 +154,19 @@ class SaveOptionsModule(BaseModule):
         plot_substrate_elem.set("limits", str(plot_opts['limits']).lower())
         
         self._create_element(plot_substrate_elem, "substrate", plot_opts['substrate'])
-        
-        if plot_opts['min_conc'] is not None or plot_opts['min_conc'] == 0:
-            self._create_element(plot_substrate_elem, "min_conc", str(plot_opts['min_conc']))
-            
-        if plot_opts['max_conc'] is not None or plot_opts['max_conc'] == 0:
-            self._create_element(plot_substrate_elem, "max_conc", str(plot_opts['max_conc']))
 
-        # Handle empty values properly for colormap, min_conc, max_conc
+        # Colormap comes before min/max concentration to match PhysiCell ordering
         if plot_opts['colormap']:
             self._create_element(plot_substrate_elem, "colormap", plot_opts['colormap'])
         else:
             # Create empty self-closing tag
             colormap_elem = ET.SubElement(plot_substrate_elem, "colormap")
+
+        if plot_opts['min_conc'] is not None or plot_opts['min_conc'] == 0:
+            self._create_element(plot_substrate_elem, "min_conc", str(plot_opts['min_conc']))
+
+        if plot_opts['max_conc'] is not None or plot_opts['max_conc'] == 0:
+            self._create_element(plot_substrate_elem, "max_conc", str(plot_opts['max_conc']))
         
         # Legacy data
         legacy_elem = self._create_element(save_elem, "legacy_data")

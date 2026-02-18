@@ -14,7 +14,7 @@ class OptionsModule(BaseModule):
             'virtual_wall_at_domain_edge': True,
             'disable_automated_spring_adhesions': False,
             'legacy_random_points_on_sphere_in_divide': False,
-            'random_seed': 0,
+            'random_seed': None,  # None means omit from XML; set to int to include
             'max_time': 8640.0,
             'time_units': 'min',
             'space_units': 'micron',
@@ -103,8 +103,9 @@ class OptionsModule(BaseModule):
         self._create_element(options_elem, "disable_automated_spring_adhesions",
                           str(self.options['disable_automated_spring_adhesions']).lower())
         
-        # Random seed
-        self._create_element(options_elem, "random_seed", str(self.options['random_seed']))
+        # Random seed (only emit when explicitly set)
+        if self.options['random_seed'] is not None:
+            self._create_element(options_elem, "random_seed", str(self.options['random_seed']))
     
     def load_from_xml(self, xml_element: Optional[ET.Element]) -> None:
         """Load options configuration from XML element.

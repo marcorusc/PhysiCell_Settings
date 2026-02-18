@@ -52,7 +52,14 @@ class BaseModule(ABC):
         """
         element = ET.SubElement(parent, tag, attrib or {})
         if text is not None:
-            element.text = str(text)
+            if isinstance(text, str):
+                # Preserve string values as-is
+                element.text = text
+            elif isinstance(text, float) and text.is_integer():
+                # Emit whole-number floats as integers (e.g. 516.0 → "516")
+                element.text = str(int(text))
+            else:
+                element.text = str(text)
         return element
     
     def _validate_positive_number(self, value: float, name: str) -> None:
