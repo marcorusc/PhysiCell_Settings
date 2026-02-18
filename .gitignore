@@ -110,3 +110,6 @@ dmypy.json
 PYPI_TOKENS_BACKUP.txt
 publish_to_pypi.sh
 .pypirc
+
+# Copilot
+.github/copilot-instructions.md
