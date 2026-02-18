@@ -16,6 +16,7 @@ class CellRulesModule(BaseModule):
         super().__init__(config)
         self.rulesets = {}
         self.rules = []
+        self.include_settings = True  # Whether to emit <settings /> in XML
     
     def add_ruleset(self, name: str, folder: str = "./config",
                    filename: str = "rules.csv", enabled: bool = True) -> None:
@@ -202,8 +203,9 @@ class CellRulesModule(BaseModule):
             self._create_element(ruleset_elem, "folder", "./config")
             self._create_element(ruleset_elem, "filename", "cell_rules.csv")
 
-        # Add settings element (required by PhysiCell)
-        self._create_element(cell_rules_elem, "settings")
+        # Add settings element (only when requested)
+        if self.include_settings:
+            self._create_element(cell_rules_elem, "settings")
 
     def load_from_xml(self, xml_element: Optional[ET.Element]) -> None:
         """Load cell rules configuration from XML element.

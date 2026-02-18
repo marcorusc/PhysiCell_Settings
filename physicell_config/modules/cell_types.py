@@ -137,15 +137,12 @@ class CellTypeModule(BaseModule):
         # Get the model configuration from the config loader
         model_config = config_loader.get_cycle_model(model)
         
-        # Set the cycle model and apply its configuration
-        self.cell_types[cell_type]['phenotype']['cycle']['model'] = model
-        self.cell_types[cell_type]['phenotype']['cycle']['data'] = model_config
-        
-        # Apply model-specific configurations like transition rates
-        if 'transition_rates' in model_config:
-            self.cell_types[cell_type]['phenotype']['cycle']['transition_rates'] = model_config['transition_rates']
-        if 'phases' in model_config:
-            self.cell_types[cell_type]['phenotype']['cycle']['phases'] = model_config['phases']
+        # Store the cycle configuration with explicit model metadata so that the
+        # XML serializer can pick the correct cycle name/code.
+        cycle_data = self.cell_types[cell_type]['phenotype']['cycle']
+        cycle_data.clear()
+        cycle_data.update(model_config)
+        cycle_data['model'] = model
     
     def set_cycle_transition_rate(self, cell_type: str, from_phase: int, to_phase: int, rate: float) -> None:
         """Set a specific transition rate between cycle phases."""
@@ -315,7 +312,58 @@ class CellTypeModule(BaseModule):
         """Update all cell types to include secretion parameters for all substrates."""
         for cell_type_name in self.cell_types.keys():
             self._update_secretion_for_all_substrates(cell_type_name)
-    
+
+    def update_all_cell_types_for_interactions(self) -> None:
+        """Populate interaction and transformation rates for all defined cell types.
+
+        For each cell type, ensures that ``live_phagocytosis_rates``,
+        ``attack_rates``, ``fusion_rates``, and ``transformation_rates``
+        contain an entry for every defined cell type (using ``0.0`` as the
+        default rate).  Existing non-default entries are preserved.
+        """
+        all_names = list(self.cell_types.keys())
+        for cell_type_name in all_names:
+            ct = self.cell_types[cell_type_name]
+            interactions = ct['phenotype']['cell_interactions']
+            transformations = ct['phenotype']['cell_transformations']
+
+            # --- live_phagocytosis_rates ---
+            rates = interactions.get('live_phagocytosis_rates', {})
+            # Remove placeholder "default" key if real cell types exist
+            if 'default' in rates and len(all_names) > 0:
+                default_val = rates.pop('default')
+            new_rates = {}
+            for name in all_names:
+                new_rates[name] = rates.get(name, 0.0)
+            interactions['live_phagocytosis_rates'] = new_rates
+
+            # --- attack_rates ---
+            rates = interactions.get('attack_rates', {})
+            if 'default' in rates and len(all_names) > 0:
+                rates.pop('default')
+            new_rates = {}
+            for name in all_names:
+                new_rates[name] = rates.get(name, 0.0)
+            interactions['attack_rates'] = new_rates
+
+            # --- fusion_rates ---
+            rates = interactions.get('fusion_rates', {})
+            if 'default' in rates and len(all_names) > 0:
+                rates.pop('default')
+            new_rates = {}
+            for name in all_names:
+                new_rates[name] = rates.get(name, 0.0)
+            interactions['fusion_rates'] = new_rates
+
+            # --- transformation_rates ---
+            rates = transformations.get('transformation_rates', {})
+            if 'default' in rates and len(all_names) > 0:
+                rates.pop('default')
+            new_rates = {}
+            for name in all_names:
+                new_rates[name] = rates.get(name, 0.0)
+            transformations['transformation_rates'] = new_rates
+
     def add_to_xml(self, parent: ET.Element) -> None:
         """Add cell types configuration to XML."""
         if not self.cell_types:
@@ -445,15 +493,24 @@ class CellTypeModule(BaseModule):
             rate_elem = self._create_element(apoptosis_elem, "death_rate", apoptosis_data.get('default_rate', apoptosis_data.get('rate', 5.31667e-05)))
             rate_elem.set("units", "1/min")
             
-            # Phase durations
-            if 'phase_durations' in apoptosis_data:
+            # Phase transition rates (alternative to phase_durations)
+            if 'phase_transition_rates' in apoptosis_data:
+                ptr_elem = self._create_element(apoptosis_elem, "phase_transition_rates")
+                ptr_elem.set("units", "1/min")
+                for rate_data in apoptosis_data['phase_transition_rates']:
+                    rate_elem = self._create_element(ptr_elem, "rate", rate_data['rate'])
+                    rate_elem.set("start_index", str(rate_data['start_index']))
+                    rate_elem.set("end_index", str(rate_data['end_index']))
+                    rate_elem.set("fixed_duration", str(rate_data.get('fixed_duration', False)).lower())
+            # Phase durations (fallback)
+            elif 'phase_durations' in apoptosis_data:
                 phase_durations_elem = self._create_element(apoptosis_elem, "phase_durations")
                 phase_durations_elem.set("units", "min")
                 for phase in apoptosis_data['phase_durations']:
                     duration_elem = self._create_element(phase_durations_elem, "duration", phase['duration'])
                     duration_elem.set("index", str(phase['index']))
                     duration_elem.set("fixed_duration", str(phase['fixed_duration']).lower())
-            
+
             # Parameters
             if 'parameters' in apoptosis_data:
                 params_elem = self._create_element(apoptosis_elem, "parameters")
@@ -463,27 +520,36 @@ class CellTypeModule(BaseModule):
                         param_elem.set("units", "1/min")
                     elif param_name == 'relative_rupture_volume':
                         param_elem.set("units", "dimensionless")
-        
+
         # Necrosis model
         if 'necrosis' in death:
             necrosis_data = death['necrosis']
             necrosis_elem = self._create_element(death_elem, "model")
             necrosis_elem.set("code", necrosis_data.get('code', '101'))
             necrosis_elem.set("name", necrosis_data.get('name', 'necrosis'))
-            
+
             # Death rate
             rate_elem = self._create_element(necrosis_elem, "death_rate", necrosis_data.get('default_rate', necrosis_data.get('rate', 0.0)))
             rate_elem.set("units", "1/min")
-            
-            # Phase durations
-            if 'phase_durations' in necrosis_data:
+
+            # Phase transition rates (alternative to phase_durations)
+            if 'phase_transition_rates' in necrosis_data:
+                ptr_elem = self._create_element(necrosis_elem, "phase_transition_rates")
+                ptr_elem.set("units", "1/min")
+                for rate_data in necrosis_data['phase_transition_rates']:
+                    rate_elem = self._create_element(ptr_elem, "rate", rate_data['rate'])
+                    rate_elem.set("start_index", str(rate_data['start_index']))
+                    rate_elem.set("end_index", str(rate_data['end_index']))
+                    rate_elem.set("fixed_duration", str(rate_data.get('fixed_duration', False)).lower())
+            # Phase durations (fallback)
+            elif 'phase_durations' in necrosis_data:
                 phase_durations_elem = self._create_element(necrosis_elem, "phase_durations")
                 phase_durations_elem.set("units", "min")
                 for phase in necrosis_data['phase_durations']:
                     duration_elem = self._create_element(phase_durations_elem, "duration", phase['duration'])
                     duration_elem.set("index", str(phase['index']))
                     duration_elem.set("fixed_duration", str(phase['fixed_duration']).lower())
-            
+
             # Parameters
             if 'parameters' in necrosis_data:
                 params_elem = self._create_element(necrosis_elem, "parameters")
@@ -497,23 +563,28 @@ class CellTypeModule(BaseModule):
     def _add_volume_xml(self, parent: ET.Element, volume: Dict[str, Any]) -> None:
         """Add volume XML elements."""
         volume_elem = self._create_element(parent, "volume")
-        
+
         total_elem = self._create_element(volume_elem, "total", volume['total'])
         total_elem.set("units", "micron^3")
-        
+
         fluid_frac_elem = self._create_element(volume_elem, "fluid_fraction", volume['fluid_fraction'])
-        
+        fluid_frac_elem.set("units", "dimensionless")
+
         nuclear_elem = self._create_element(volume_elem, "nuclear", volume['nuclear'])
         nuclear_elem.set("units", "micron^3")
-        
+
         # Add other volume parameters
-        for param in ['fluid_change_rate', 'cytoplasmic_biomass_change_rate', 
+        for param in ['fluid_change_rate', 'cytoplasmic_biomass_change_rate',
                      'nuclear_biomass_change_rate', 'calcified_fraction',
                      'calcification_rate', 'relative_rupture_volume']:
             if param in volume:
                 elem = self._create_element(volume_elem, param, volume[param])
                 if 'rate' in param:
                     elem.set("units", "1/min")
+                elif param == 'calcified_fraction':
+                    elem.set("units", "dimensionless")
+                elif param == 'relative_rupture_volume':
+                    elem.set("units", "dimensionless")
     
     def _add_mechanics_xml(self, parent: ET.Element, mechanics: Dict[str, Any]) -> None:
         """Add mechanics XML elements."""
@@ -762,16 +833,16 @@ class CellTypeModule(BaseModule):
     def _add_custom_data_xml(self, parent: ET.Element, custom_data: Dict[str, Any]) -> None:
         """Add custom data XML elements."""
         custom_data_elem = self._create_element(parent, "custom_data")
-        
+
         for key, value in custom_data.items():
             if isinstance(value, dict) and 'value' in value:
                 elem = self._create_element(custom_data_elem, key, value.get('value', ""))
+                if 'conserved' in value:
+                    elem.set("conserved", str(value['conserved']).lower())
                 if 'units' in value:
                     elem.set("units", str(value['units']))
                 if 'description' in value:
                     elem.set("description", str(value['description']))
-                if 'conserved' in value:
-                    elem.set("conserved", str(value['conserved']).lower())
             elif isinstance(value, dict):
                 # Handle nested dictionaries that do not follow the standard schema
                 nested_elem = self._create_element(custom_data_elem, key)

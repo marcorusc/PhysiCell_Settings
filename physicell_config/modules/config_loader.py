@@ -120,9 +120,15 @@ class ConfigLoader:
         except ValueError:
             template_config = self.get_cell_type_template("default")
         
+        cycle_model_name = template_config.get("cycle", "flow_cytometry_separated")
+        cycle_data = self.get_cycle_model(cycle_model_name)
+        # Keep track of which high-level model generated these parameters so
+        # downstream serialization can pick the correct PhysiCell cycle name.
+        cycle_data["model"] = cycle_model_name
+
         # Build phenotype from defaults
         phenotype = {
-            "cycle": self.get_cycle_model(template_config.get("cycle", "flow_cytometry_separated")),
+            "cycle": cycle_data,
             "death": {
                 "apoptosis": self.get_death_model("apoptosis"),
                 "necrosis": self.get_death_model("necrosis")
