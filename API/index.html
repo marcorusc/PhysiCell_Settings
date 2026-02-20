@@ -1,0 +1,1204 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Python package for generating PhysiCell_settings.xml configuration files">
+      
+      
+      
+        <link rel="canonical" href="https://marcorusc.github.io/PhysiCell_Settings/API/">
+      
+      
+        <link rel="prev" href="../AdvancedFeatures/">
+      
+      
+        <link rel="next" href="../contributing/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.2">
+    
+    
+      
+        <title>Handwritten API - PhysiCell Settings</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="cyan">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#physicell-settings-api-reference" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="PhysiCell Settings" class="md-header__button md-logo" aria-label="PhysiCell Settings" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            PhysiCell Settings
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Handwritten API
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="cyan"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="cyan"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/marcorusc/PhysiCell_Settings" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    marcorusc/PhysiCell_Settings
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../api_reference/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  API Reference
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../AdvancedFeatures/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Advanced Features
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Handwritten API
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../contributing/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Contributing
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="PhysiCell Settings" class="md-nav__button md-logo" aria-label="PhysiCell Settings" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    PhysiCell Settings
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/marcorusc/PhysiCell_Settings" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    marcorusc/PhysiCell_Settings
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../AdvancedFeatures/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Advanced Features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Handwritten API
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Handwritten API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#physicellconfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PhysiCellConfig
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PhysiCellConfig">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Methods
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#modules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Modules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#domainmodule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DomainModule
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#substratemodule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SubstrateModule
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#celltypemodule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CellTypeModule
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cellrulesmodule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CellRulesModule
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cellrulescsv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CellRulesCSV
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optionsmodule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OptionsModule
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#initialconditionsmodule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        InitialConditionsModule
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#saveoptionsmodule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SaveOptionsModule
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#physibossmodule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PhysiBoSSModule
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configloader" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ConfigLoader
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#detailed-module-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detailed Module Functions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Detailed Module Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#domainmodule_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DomainModule
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#substratemodule_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SubstrateModule
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#celltypemodule_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CellTypeModule
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cellrulesmodule_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CellRulesModule
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cellrulescsv_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CellRulesCSV
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optionsmodule_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OptionsModule
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#initialconditionsmodule_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        InitialConditionsModule
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#saveoptionsmodule_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SaveOptionsModule
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#physibossmodule_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PhysiBoSSModule
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configloader_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ConfigLoader
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#package-weaknesses-and-possible-improvements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Package Weaknesses and Possible Improvements
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="physicell-settings-api-reference">PhysiCell Settings API Reference<a class="headerlink" href="#physicell-settings-api-reference" title="Permanent link">&para;</a></h1>
+<p>This page summarizes the public API provided by the <code>physicell_config</code> package.
+Each section lists the available classes and methods along with a short
+explanation of their purpose and parameters.</p>
+<h2 id="physicellconfig">PhysiCellConfig<a class="headerlink" href="#physicellconfig" title="Permanent link">&para;</a></h2>
+<p>Located in <code>physicell_config/config_builder_modular.py</code>.
+This class orchestrates all configuration modules and provides convenience
+helpers to generate and save complete PhysiCell XML files.</p>
+<h3 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>__init__()</code> – instantiate the builder and all modules.</li>
+<li><code>cell_rules_csv</code> – property returning a <code>CellRulesCSV</code> helper with updated context.</li>
+<li><code>add_user_parameter(name, value, units='dimensionless', description='', parameter_type='double')</code> – register a custom user parameter.</li>
+<li><code>set_number_of_cells(count)</code> – convenience setter for the standard <code>number_of_cells</code> parameter.</li>
+<li><code>setup_basic_simulation(x_range=(-500,500), y_range=(-500,500), mesh_spacing=20.0, max_time=8640.0)</code> – configure domain, options and output for a common simulation.</li>
+<li><code>add_simple_substrate(name, diffusion_coeff=1000.0, decay_rate=0.1, initial_value=0.0)</code> – quick helper to create a substrate with basic parameters.</li>
+<li><code>add_simple_cell_type(name, secretion_substrate=None, secretion_rate=0.0, motile=False)</code> – add a cell type with optional secretion and motility settings.</li>
+<li><code>generate_xml()</code> – assemble the XML tree for the current configuration and return it as a string.</li>
+<li><code>save_xml(filename)</code> – generate and write the XML to disk.</li>
+<li><code>get_summary()</code> – return a dictionary summarizing domain, substrates, cell types and options.</li>
+<li><code>validate()</code> – basic sanity checks returning a list of issues found.</li>
+<li>legacy helpers <code>set_domain</code>, <code>add_substrate</code>, <code>add_cell_type</code> mirror module methods.</li>
+<li><code>set_parallel_settings(omp_num_threads=4)</code> – set OpenMP thread count.</li>
+</ul>
+<h2 id="modules">Modules<a class="headerlink" href="#modules" title="Permanent link">&para;</a></h2>
+<p>The builder is composed of several modules located under <code>physicell_config/modules</code>.
+Each module exposes a small API focused on a single aspect of the configuration.</p>
+<h3 id="domainmodule">DomainModule<a class="headerlink" href="#domainmodule" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>set_bounds(x_min, x_max, y_min, y_max, z_min=-10.0, z_max=10.0)</code> – set the simulation domain limits.</li>
+<li><code>set_mesh(dx, dy, dz=20.0)</code> – mesh spacing in each dimension.</li>
+<li><code>set_2D(use_2D=True)</code> – toggle 2‑D mode.</li>
+<li><code>add_to_xml(parent)</code> – append domain settings to an XML element.</li>
+<li><code>get_info()</code> – return the currently stored domain values.</li>
+</ul>
+<h3 id="substratemodule">SubstrateModule<a class="headerlink" href="#substratemodule" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>set_track_internalized_substrates(enabled)</code> – include internalized substrate tracking flag.</li>
+<li><code>add_substrate(name, diffusion_coefficient=1000.0, decay_rate=0.1, initial_condition=0.0, dirichlet_enabled=False, dirichlet_value=0.0, units='dimensionless', initial_units='mmHg')</code> – register a new substrate and its physical parameters.</li>
+<li><code>set_dirichlet_boundary(substrate_name, boundary, enabled, value=0.0)</code> – configure boundary conditions per face.</li>
+<li><code>remove_substrate(name)</code> – delete a substrate definition.</li>
+<li><code>add_to_xml(parent)</code> – write microenvironment data to XML.</li>
+<li><code>get_substrates()</code> – return the internal dictionary of substrates.</li>
+</ul>
+<h3 id="celltypemodule">CellTypeModule<a class="headerlink" href="#celltypemodule" title="Permanent link">&para;</a></h3>
+<p>Handles phenotype and behavioral properties for all cell types.
+- <code>add_cell_type(name, parent_type='default', template='default')</code> – create a cell type using a predefined template.
+- Numerous setter helpers exist for cycle model, death rates, volume, motility, secretion and intracellular models (see source for full list).
+- <code>update_all_cell_types_for_substrates()</code> – ensure secretion parameters exist for all substrates.
+- <code>add_to_xml(parent)</code> – serialize all cell type definitions to XML.
+- <code>get_cell_types()</code> – return the stored cell type definitions.</p>
+<h3 id="cellrulesmodule">CellRulesModule<a class="headerlink" href="#cellrulesmodule" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>add_ruleset(name, folder='./config', filename='rules.csv', enabled=True)</code> – declare a CSV ruleset to load during simulation.</li>
+<li><code>add_rule(cell_type, signal, direction, behavior, saturation_value=0.0, half_max=0.5, hill_power=4.0, apply_to_dead=0)</code> – add a rule following the CBHG v3.0 CSV format.</li>
+<li><code>load_rules_from_csv(filename)</code> / <code>save_rules_to_csv(filename)</code> – import or export rules in headerless PhysiCell CSV format.</li>
+<li><code>add_to_xml(parent)</code> – write the cell rules structure to XML.</li>
+<li><code>get_rules()</code> / <code>get_rulesets()</code> – return defined rules and rulesets.</li>
+</ul>
+<h3 id="cellrulescsv">CellRulesCSV<a class="headerlink" href="#cellrulescsv" title="Permanent link">&para;</a></h3>
+<p>Utility class for creating valid <code>cell_rules.csv</code> files.
+- Methods to list available signals/behaviors (<code>get_available_signals</code>, <code>get_available_behaviors</code>).
+- Context helpers (<code>update_context_from_config</code>, <code>get_context</code>).
+- <code>add_rule(cell_type, signal, direction, behavior, saturation_value, half_max, hill_power, apply_to_dead)</code> – add a rule in CSV layout and <code>generate_csv(filename)</code> to export.
+- Includes convenience <code>print_*</code> methods to display registry information.</p>
+<h3 id="optionsmodule">OptionsModule<a class="headerlink" href="#optionsmodule" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>set_max_time(max_time, units='min')</code> – total simulation time.</li>
+<li><code>set_time_steps(dt_diffusion=None, dt_mechanics=None, dt_phenotype=None)</code> – adjust internal time steps.</li>
+<li><code>set_virtual_wall(enabled)</code> and other toggles like <code>set_automated_spring_adhesions</code>, <code>set_random_seed</code>, <code>set_parallel_threads</code>.</li>
+<li><code>add_to_xml(parent)</code> – append options to XML.</li>
+<li><code>get_options()</code> – return the stored options dictionary.</li>
+</ul>
+<h3 id="initialconditionsmodule">InitialConditionsModule<a class="headerlink" href="#initialconditionsmodule" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>add_cell_cluster(cell_type, x, y, z=0.0, radius=100.0, num_cells=100)</code> – place a sphere of cells.</li>
+<li><code>add_single_cell(cell_type, x, y, z=0.0)</code> – place a single cell.</li>
+<li><code>add_rectangular_region(cell_type, x_min, x_max, y_min, y_max, z_min=-5.0, z_max=5.0, density=0.8)</code> – fill a region with random cells.</li>
+<li><code>add_csv_file(filename, folder='./config', enabled=False)</code> – use an external CSV for initial positions.</li>
+<li><code>add_to_xml(parent)</code> – write initial conditions to XML.</li>
+<li><code>get_conditions()</code> – return the defined conditions.</li>
+</ul>
+<h3 id="saveoptionsmodule">SaveOptionsModule<a class="headerlink" href="#saveoptionsmodule" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>set_output_folder(folder)</code> – output path for simulation results.</li>
+<li><code>set_full_data_options(interval=None, enable=None, settings_interval=None)</code> – configure full data output.</li>
+<li><code>set_svg_options(interval=None, enable=None)</code> and <code>set_svg_plot_substrate(enabled=False, limits=False, substrate='substrate', colormap='YlOrRd', min_conc=0, max_conc=1)</code> for visualisation.</li>
+<li><code>set_svg_legend(enabled=False, cell_phase=False, cell_type=True)</code> – legend options.</li>
+<li><code>set_legacy_data(enable)</code> – toggle legacy format output.</li>
+<li><code>add_to_xml(parent)</code> – append save configuration.</li>
+<li><code>get_save_options()</code> – return internal save options.</li>
+</ul>
+<h3 id="physibossmodule">PhysiBoSSModule<a class="headerlink" href="#physibossmodule" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>enable_physiboss(model_file='boolean_model.bnd', initial_values=None, mutations=None, parameters=None)</code> – activate PhysiBoSS integration with initial settings.</li>
+<li><code>set_time_step(value)</code> and <code>set_scaling(value)</code> – adjust simulation step and scaling.</li>
+<li><code>add_initial_value(node, value)</code> / <code>add_mutation(cell_line, node, value)</code> / <code>add_parameter(name, value)</code> – modify network settings.</li>
+<li><code>add_to_xml(parent)</code> – serialize PhysiBoSS configuration when enabled.</li>
+<li><code>is_enabled()</code> – check status.</li>
+<li><code>get_settings()</code> – retrieve current options.</li>
+</ul>
+<h3 id="configloader">ConfigLoader<a class="headerlink" href="#configloader" title="Permanent link">&para;</a></h3>
+<p>Utility singleton in <code>physicell_config/modules/config_loader.py</code> used by all
+modules to pull default parameters from JSON files.</p>
+<ul>
+<li><code>get_cycle_model(name)</code> – return cycle model templates</li>
+<li><code>get_death_model(name)</code> – apoptosis or necrosis defaults</li>
+<li><code>get_volume_defaults()</code> / <code>get_mechanics_defaults()</code> / <code>get_motility_defaults()</code>
+  – phenotype defaults</li>
+<li><code>get_cell_type_template(template_name)</code> – load cell type presets</li>
+<li>Built-in cell type templates: <code>default</code>, <code>live_cell</code>, <code>maboss_cell</code></li>
+<li><code>get_substrate_defaults(name)</code> – standard substrate parameters</li>
+</ul>
+<p>See <code>docs/AdvancedFeatures.md</code> for more details on advanced usage.</p>
+<h2 id="detailed-module-functions">Detailed Module Functions<a class="headerlink" href="#detailed-module-functions" title="Permanent link">&para;</a></h2>
+<p>Below is a complete list of public helpers available in each module.</p>
+<h3 id="domainmodule_1">DomainModule<a class="headerlink" href="#domainmodule_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>set_bounds(x_min, x_max, y_min, y_max, z_min=-10.0, z_max=10.0)</code> – define the spatial extents of the domain.</li>
+<li><code>set_mesh(dx, dy, dz=20.0)</code> – specify grid spacing in microns.</li>
+<li><code>set_2D(use_2D=True)</code> – enable 2‑D simulations.</li>
+<li><code>add_to_xml(parent)</code> – append domain settings to an XML element.</li>
+<li><code>get_info()</code> – return current configuration as a dictionary.</li>
+</ul>
+<h3 id="substratemodule_1">SubstrateModule<a class="headerlink" href="#substratemodule_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>set_track_internalized_substrates(enabled)</code> – toggle tracking of internalised substrates.</li>
+<li><code>add_substrate(name, diffusion_coefficient=1000.0, decay_rate=0.1, initial_condition=0.0, dirichlet_enabled=False, dirichlet_value=0.0, units='dimensionless', initial_units='mmHg')</code> – create a substrate definition.</li>
+<li><code>set_dirichlet_boundary(substrate_name, boundary, enabled, value=0.0)</code> – set per‑face Dirichlet conditions.</li>
+<li><code>remove_substrate(name)</code> – delete an existing substrate.</li>
+<li><code>add_to_xml(parent)</code> – write microenvironment data to XML.</li>
+<li><code>get_substrates()</code> – return all defined substrates.</li>
+</ul>
+<h3 id="celltypemodule_1">CellTypeModule<a class="headerlink" href="#celltypemodule_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>add_cell_type(name, parent_type='default', template='default')</code> – create a new cell type from a template.</li>
+<li><code>set_cycle_model(cell_type, model)</code> – assign a cycle model (<code>Ki67_basic</code>, <code>Ki67_advanced</code>, <code>live</code>, <code>cycling_quiescent</code>, <code>flow_cytometry</code>, <code>flow_cytometry_separated</code>).</li>
+<li><code>set_cycle_transition_rate(cell_type, from_phase, to_phase, rate)</code> – override a specific phase transition rate.</li>
+<li><code>set_cycle_phase_durations(cell_type, durations)</code> – set cycle phase durations as a list of <code>{index, duration, fixed_duration}</code> dicts; clears any transition rates so <code>&lt;phase_durations&gt;</code> is used in the XML output. Both formats are valid in PhysiCell.</li>
+<li><code>set_death_rate(cell_type, death_type, rate)</code> – set the base death rate for <code>'apoptosis'</code> or <code>'necrosis'</code>.</li>
+<li><code>set_death_parameters(cell_type, death_type, **params)</code> – set death model sub-parameters: <code>unlysed_fluid_change_rate</code>, <code>lysed_fluid_change_rate</code>, <code>cytoplasmic_biomass_change_rate</code>, <code>nuclear_biomass_change_rate</code>, <code>calcification_rate</code>, <code>relative_rupture_volume</code>.</li>
+<li><code>set_death_phase_durations(cell_type, death_type, durations)</code> – set death phase durations; removes any existing <code>phase_transition_rates</code>.</li>
+<li><code>set_death_phase_transition_rates(cell_type, death_type, rates)</code> – set death phase transition rates as a list of <code>{start_index, end_index, rate, fixed_duration}</code> dicts; removes any existing <code>phase_durations</code>.</li>
+<li><code>set_volume_parameters(cell_type, total=None, nuclear=None, fluid_fraction=None)</code> – adjust volume attributes.</li>
+<li><code>set_motility(cell_type, speed=None, persistence_time=None, migration_bias=None, enabled=None)</code> – configure motility.</li>
+<li><code>set_chemotaxis(cell_type, substrate, enabled=True, direction=1)</code> – simple chemotaxis towards a substrate.</li>
+<li><code>set_advanced_chemotaxis(cell_type, substrate_sensitivities, enabled=True, normalize_each_gradient=False)</code> – multi‑substrate chemotaxis.</li>
+<li><code>add_secretion(cell_type, substrate, secretion_rate, secretion_target=1.0, uptake_rate=0.0, net_export_rate=0.0)</code> – add secretion parameters.</li>
+<li><code>update_all_cell_types_for_substrates()</code> – ensure secretion parameters exist for all substrates.</li>
+<li><code>set_cell_adhesion_affinities(cell_type, affinities)</code> – set per-cell-type adhesion affinities from a <code>{target_name: value}</code> dict; replaces any existing affinities.</li>
+<li><code>update_all_cell_types_for_adhesion_affinities(default_affinity=1.0)</code> – populate adhesion affinities so every cell type has an explicit entry for every other; preserves existing non-default values.</li>
+<li><code>set_phagocytosis_rates(cell_type, apoptotic=None, necrotic=None, other_dead=None)</code> – set dead-cell phagocytosis rates.</li>
+<li><code>set_attack_rate(cell_type, target_cell_type, rate)</code> – set the rate at which <code>cell_type</code> attacks <code>target_cell_type</code>.</li>
+<li><code>set_attack_parameters(cell_type, damage_rate=None, duration=None)</code> – set attack damage rate and duration.</li>
+<li><code>set_transformation_rate(cell_type, target_cell_type, rate)</code> – set the rate at which <code>cell_type</code> transforms into <code>target_cell_type</code>.</li>
+<li><code>set_mechanics_parameters(cell_type, **params)</code> – set any combination of mechanics parameters: <code>cell_cell_adhesion_strength</code>, <code>cell_cell_repulsion_strength</code>, <code>relative_maximum_adhesion_distance</code>, <code>attachment_elastic_constant</code>, <code>attachment_rate</code>, <code>detachment_rate</code>, <code>maximum_number_of_attachments</code>.</li>
+<li><code>set_custom_data(cell_type, key, value, units='dimensionless', description='', conserved=False)</code> – add or update a custom data entry.</li>
+<li><code>clear_custom_data(cell_type)</code> – remove all custom data entries for a cell type.</li>
+<li><code>update_all_cell_types_for_interactions()</code> – populate live phagocytosis, attack, fusion, and transformation rate dicts for all defined cell types with zero defaults.</li>
+<li><code>add_intracellular_model(cell_type, model_type='maboss', bnd_filename='', cfg_filename='')</code> – attach an intracellular model.</li>
+<li><code>set_intracellular_settings(cell_type, intracellular_dt=None, time_stochasticity=None, scaling=None, start_time=None, inheritance_global=None)</code> – tweak intracellular options.</li>
+<li><code>add_intracellular_mutation(cell_type, intracellular_name, value)</code> – force a node value.</li>
+<li><code>add_intracellular_initial_value(cell_type, intracellular_name, value)</code> – set initial node value.</li>
+<li><code>add_intracellular_input(cell_type, physicell_name, intracellular_name, action='activation', threshold=1, smoothing=0)</code> – map a substrate or variable to a network node.</li>
+<li><code>add_intracellular_output(cell_type, physicell_name, intracellular_name, action='activation', value=1000000, base_value=0, smoothing=0)</code> – map a network node to a behavior.</li>
+<li><code>add_to_xml(parent)</code> – serialize cell definitions to XML.</li>
+<li><code>get_cell_types()</code> – return all stored cell type data.</li>
+</ul>
+<h3 id="cellrulesmodule_1">CellRulesModule<a class="headerlink" href="#cellrulesmodule_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>add_ruleset(name, folder='./config', filename='rules.csv', enabled=True)</code> – register a CSV ruleset file.</li>
+<li><code>add_rule(cell_type, signal, direction, behavior, saturation_value=0.0, half_max=0.5, hill_power=4.0, apply_to_dead=0)</code> – store a rule following the CBHG v3.0 format.</li>
+<li><code>load_rules_from_csv(filename)</code> – import rules from a headerless PhysiCell CSV.</li>
+<li><code>save_rules_to_csv(filename)</code> – export current rules to headerless PhysiCell CSV.</li>
+<li><code>add_to_xml(parent)</code> – write the cell rules section.</li>
+<li><code>get_rules()</code> – list rule dictionaries.</li>
+<li><code>get_rulesets()</code> – list registered rulesets.</li>
+<li><code>clear_rules()</code> – remove all rules.</li>
+<li><code>clear_rulesets()</code> – remove all rulesets.</li>
+</ul>
+<h3 id="cellrulescsv_1">CellRulesCSV<a class="headerlink" href="#cellrulescsv_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>update_context_from_config(config)</code> – refresh cell types and substrates from a config instance.</li>
+<li><code>get_available_signals(filter_by_type=None)</code> – list known signals.</li>
+<li><code>get_available_behaviors(filter_by_type=None)</code> – list known behaviors.</li>
+<li><code>get_context()</code> – inspect current context.</li>
+<li><code>get_signal_by_name(signal_name)</code> – look up a signal by name.</li>
+<li><code>get_behavior_by_name(behavior_name)</code> – look up a behavior by name.</li>
+<li><code>add_rule(cell_type, signal, direction, behavior, saturation_value, half_max, hill_power, apply_to_dead)</code> – append a CSV rule.</li>
+<li><code>remove_rule(index)</code> – delete a rule by index.</li>
+<li><code>get_rules()</code> – list stored rules.</li>
+<li><code>clear_rules()</code> – remove all rules.</li>
+<li><code>generate_csv(filename)</code> – export a PhysiCell compatible CSV.</li>
+<li><code>validate_rules()</code> – return warnings or errors for the current rule set.</li>
+<li><code>print_available_signals(filter_by_type=None)</code> – print signals table.</li>
+<li><code>print_available_behaviors(filter_by_type=None)</code> – print behaviors table.</li>
+<li><code>print_context()</code> – display current context.</li>
+<li><code>print_rules()</code> – display the rule list.</li>
+<li><code>add_to_xml(parent)</code> – no-op placeholder for compatibility.</li>
+</ul>
+<h3 id="optionsmodule_1">OptionsModule<a class="headerlink" href="#optionsmodule_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>set_max_time(max_time, units='min')</code> – simulation duration.</li>
+<li><code>set_time_steps(dt_diffusion=None, dt_mechanics=None, dt_phenotype=None)</code> – override solver time steps.</li>
+<li><code>set_virtual_wall(enabled)</code> – toggle boundary walls.</li>
+<li><code>set_automated_spring_adhesions(disabled)</code> – disable automated adhesions.</li>
+<li><code>set_random_seed(seed)</code> – RNG seed.</li>
+<li><code>set_legacy_random_points(enabled)</code> – use legacy division points.</li>
+<li><code>set_parallel_threads(num_threads)</code> – OpenMP thread count.</li>
+<li><code>add_to_xml(parent)</code> – append options to XML.</li>
+<li><code>get_options()</code> – retrieve the options dictionary.</li>
+</ul>
+<h3 id="initialconditionsmodule_1">InitialConditionsModule<a class="headerlink" href="#initialconditionsmodule_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>add_cell_cluster(cell_type, x, y, z=0.0, radius=100.0, num_cells=100)</code> – place a spherical cluster.</li>
+<li><code>add_single_cell(cell_type, x, y, z=0.0)</code> – place one cell.</li>
+<li><code>add_rectangular_region(cell_type, x_min, x_max, y_min, y_max, z_min=-5.0, z_max=5.0, density=0.8)</code> – populate a region.</li>
+<li><code>add_csv_file(filename, folder='./config', enabled=False)</code> – import positions from CSV.</li>
+<li><code>add_to_xml(parent)</code> – write initial conditions to XML.</li>
+<li><code>get_conditions()</code> – return configured conditions.</li>
+<li><code>clear_conditions()</code> – remove all conditions.</li>
+</ul>
+<h3 id="saveoptionsmodule_1">SaveOptionsModule<a class="headerlink" href="#saveoptionsmodule_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>set_output_folder(folder)</code> – output directory.</li>
+<li><code>set_full_data_options(interval=None, enable=None, settings_interval=None)</code> – full data dump settings.</li>
+<li><code>set_svg_options(interval=None, enable=None)</code> – global SVG settings.</li>
+<li><code>set_svg_plot_substrate(enabled=False, limits=False, substrate='substrate', colormap='YlOrRd', min_conc=0, max_conc=1)</code> – substrate plot control.</li>
+<li><code>set_svg_legend(enabled=False, cell_phase=False, cell_type=True)</code> – legend visibility.</li>
+<li><code>set_legacy_data(enable)</code> – legacy output files.</li>
+<li><code>add_to_xml(parent)</code> – append save configuration.</li>
+<li><code>get_save_options()</code> – return save options.</li>
+</ul>
+<h3 id="physibossmodule_1">PhysiBoSSModule<a class="headerlink" href="#physibossmodule_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>enable_physiboss(model_file='boolean_model.bnd', initial_values=None, mutations=None, parameters=None)</code> – activate the Boolean network.</li>
+<li><code>set_time_step(value)</code> – network step size in minutes.</li>
+<li><code>set_scaling(value)</code> – scale network speed.</li>
+<li><code>add_initial_value(node, value)</code> – set a node's initial state.</li>
+<li><code>add_mutation(cell_line, node, value)</code> – force a mutation for a cell line.</li>
+<li><code>add_parameter(name, value)</code> – additional simulator parameter.</li>
+<li><code>add_to_xml(parent)</code> – export settings if enabled.</li>
+<li><code>is_enabled()</code> – check whether PhysiBoSS is active.</li>
+<li><code>get_settings()</code> – retrieve current PhysiBoSS options.</li>
+</ul>
+<h3 id="configloader_1">ConfigLoader<a class="headerlink" href="#configloader_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>get_cycle_model(name)</code></li>
+<li><code>get_death_model(name)</code></li>
+<li><code>get_volume_defaults()</code></li>
+<li><code>get_mechanics_defaults()</code></li>
+<li><code>get_motility_defaults()</code></li>
+<li><code>get_secretion_defaults()</code></li>
+<li><code>get_cell_interactions_defaults()</code></li>
+<li><code>get_cell_transformations_defaults()</code></li>
+<li><code>get_cell_integrity_defaults()</code></li>
+<li><code>get_custom_data_defaults(data_type='sample')</code></li>
+<li><code>get_initial_parameter_distributions_defaults()</code></li>
+<li><code>get_intracellular_defaults(intracellular_type='maboss')</code></li>
+<li><code>get_cell_type_template(template_name)</code></li>
+<li><code>get_substrate_defaults(name='substrate')</code></li>
+<li><code>get_default_phenotype(template='default')</code></li>
+</ul>
+<h2 id="package-weaknesses-and-possible-improvements">Package Weaknesses and Possible Improvements<a class="headerlink" href="#package-weaknesses-and-possible-improvements" title="Permanent link">&para;</a></h2>
+<p>While the package offers a comprehensive API, several aspects could be enhanced:</p>
+<ol>
+<li><strong>Sparse documentation for advanced features</strong> – some complex methods
+   lack detailed examples. Extended tutorials and docstrings would ease adoption.</li>
+<li><strong>Validation gaps</strong> – configuration validation currently checks only a few
+   conditions. More thorough checks (e.g. verifying cross‑module consistency) can
+   prevent runtime errors.</li>
+<li><strong>No explicit versioned schema</strong> – the XML generation assumes a single
+   schema. Providing version compatibility layers or schema definitions would help
+   long‑term maintenance.</li>
+<li><strong>Dependency on large JSON defaults</strong> – modifying default parameters requires
+   editing JSON files manually. A helper API for managing these defaults could
+   simplify customization.</li>
+</ol>
+<p>Addressing these items would make the project more robust and easier to extend.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "toc.integrate", "search.suggest", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
