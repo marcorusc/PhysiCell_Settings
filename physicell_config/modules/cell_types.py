@@ -171,6 +171,41 @@ class CellTypeModule(BaseModule):
             'rate': rate
         })
     
+    def set_cycle_phase_durations(self, cell_type: str, durations: list) -> None:
+        """Set cycle phase durations for a cell type.
+
+        This clears any transition rates so the XML output uses
+        ``<phase_durations>`` instead of ``<phase_transition_rates>``.
+        Both formats are valid in PhysiCell.
+
+        Parameters
+        ----------
+        cell_type:
+            Name of the cell type to modify.
+        durations:
+            List of dicts, each with keys ``index`` (int),
+            ``duration`` (float), and ``fixed_duration`` (bool).
+
+        Example
+        -------
+        >>> config.cell_types.set_cycle_phase_durations('default', [
+        ...     {'index': 0, 'duration': 300.0, 'fixed_duration': False},
+        ...     {'index': 1, 'duration': 480.0, 'fixed_duration': True},
+        ...     {'index': 2, 'duration': 240.0, 'fixed_duration': True},
+        ...     {'index': 3, 'duration': 60.0, 'fixed_duration': True},
+        ... ])
+        """
+        if cell_type not in self.cell_types:
+            raise ValueError(f"Cell type '{cell_type}' not found")
+
+        for d in durations:
+            self._validate_non_negative_number(d['duration'], f"phase {d['index']} duration")
+
+        cycle = self.cell_types[cell_type]['phenotype']['cycle']
+        cycle['phase_durations'] = durations
+        # Clear transition_rates so _add_cycle_xml uses phase_durations
+        cycle['transition_rates'] = []
+
     def set_death_rate(self, cell_type: str, death_type: str, rate: float) -> None:
         """Set death rate for a cell type."""
         if cell_type not in self.cell_types:
@@ -185,7 +220,365 @@ class CellTypeModule(BaseModule):
             self.cell_types[cell_type]['phenotype']['death'][death_type]['default_rate'] = rate
         else:
             self.cell_types[cell_type]['phenotype']['death'][death_type]['rate'] = rate
-    
+
+    def set_death_parameters(self, cell_type: str, death_type: str, **params) -> None:
+        """Set death model sub-parameters for a cell type.
+
+        Parameters
+        ----------
+        cell_type:
+            Name of the cell type.
+        death_type:
+            ``'apoptosis'`` or ``'necrosis'``.
+        **params:
+            Keyword arguments corresponding to death model parameter names.
+            Valid keys: ``unlysed_fluid_change_rate``,
+            ``lysed_fluid_change_rate``, ``cytoplasmic_biomass_change_rate``,
+            ``nuclear_biomass_change_rate``, ``calcification_rate``,
+            ``relative_rupture_volume``.
+
+        Example
+        -------
+        >>> config.cell_types.set_death_parameters('default', 'necrosis',
+        ...     unlysed_fluid_change_rate=0.05,
+        ...     cytoplasmic_biomass_change_rate=0.0166667,
+        ... )
+        """
+        if cell_type not in self.cell_types:
+            raise ValueError(f"Cell type '{cell_type}' not found")
+        if death_type not in ['apoptosis', 'necrosis']:
+            raise ValueError(f"Invalid death type '{death_type}'. Use 'apoptosis' or 'necrosis'")
+
+        valid_keys = {
+            'unlysed_fluid_change_rate', 'lysed_fluid_change_rate',
+            'cytoplasmic_biomass_change_rate', 'nuclear_biomass_change_rate',
+            'calcification_rate', 'relative_rupture_volume',
+        }
+        for key in params:
+            if key not in valid_keys:
+                raise ValueError(f"Invalid death parameter '{key}'. Valid: {valid_keys}")
+
+        death_data = self.cell_types[cell_type]['phenotype']['death'][death_type]
+        if 'parameters' not in death_data:
+            death_data['parameters'] = {}
+        death_data['parameters'].update(params)
+
+    def set_death_phase_durations(self, cell_type: str, death_type: str,
+                                  durations: list) -> None:
+        """Set death model phase durations (removes any phase_transition_rates).
+
+        Parameters
+        ----------
+        cell_type:
+            Name of the cell type.
+        death_type:
+            ``'apoptosis'`` or ``'necrosis'``.
+        durations:
+            List of dicts with ``index``, ``duration``, ``fixed_duration``.
+
+        Example
+        -------
+        >>> config.cell_types.set_death_phase_durations('Treg', 'apoptosis', [
+        ...     {'index': 0, 'duration': 0.0, 'fixed_duration': True},
+        ... ])
+        """
+        if cell_type not in self.cell_types:
+            raise ValueError(f"Cell type '{cell_type}' not found")
+        if death_type not in ['apoptosis', 'necrosis']:
+            raise ValueError(f"Invalid death type '{death_type}'")
+
+        death_data = self.cell_types[cell_type]['phenotype']['death'][death_type]
+        death_data['phase_durations'] = durations
+        # Remove transition rates to ensure durations are used
+        death_data.pop('phase_transition_rates', None)
+
+    def set_death_phase_transition_rates(self, cell_type: str, death_type: str,
+                                         rates: list) -> None:
+        """Set death model phase transition rates (removes any phase_durations).
+
+        Parameters
+        ----------
+        cell_type:
+            Name of the cell type.
+        death_type:
+            ``'apoptosis'`` or ``'necrosis'``.
+        rates:
+            List of dicts with ``start_index``, ``end_index``, ``rate``,
+            ``fixed_duration``.
+
+        Example
+        -------
+        >>> config.cell_types.set_death_phase_transition_rates(
+        ...     'M0 macrophage', 'necrosis', [
+        ...         {'start_index': 0, 'end_index': 1, 'rate': 9e9, 'fixed_duration': False},
+        ...         {'start_index': 1, 'end_index': 2, 'rate': 1.15741e-05, 'fixed_duration': True},
+        ...     ])
+        """
+        if cell_type not in self.cell_types:
+            raise ValueError(f"Cell type '{cell_type}' not found")
+        if death_type not in ['apoptosis', 'necrosis']:
+            raise ValueError(f"Invalid death type '{death_type}'")
+
+        death_data = self.cell_types[cell_type]['phenotype']['death'][death_type]
+        death_data['phase_transition_rates'] = rates
+        # Remove durations to ensure transition rates are used
+        death_data.pop('phase_durations', None)
+
+    def set_cell_adhesion_affinities(self, cell_type: str, affinities: dict) -> None:
+        """Set per-cell-type adhesion affinities.
+
+        Parameters
+        ----------
+        cell_type:
+            Name of the cell type to modify.
+        affinities:
+            Dictionary mapping target cell type names to affinity values.
+            Replaces any existing affinities (including the placeholder
+            ``"default"`` key).
+
+        Example
+        -------
+        >>> config.cell_types.set_cell_adhesion_affinities('M0 macrophage', {
+        ...     'malignant epithelial cell': 1.0,
+        ...     'M0 macrophage': 1.0,
+        ...     'effector T cell': 0.5,
+        ... })
+        """
+        if cell_type not in self.cell_types:
+            raise ValueError(f"Cell type '{cell_type}' not found")
+
+        for target, value in affinities.items():
+            self._validate_non_negative_number(value, f"adhesion affinity for {target}")
+
+        self.cell_types[cell_type]['phenotype']['mechanics']['cell_adhesion_affinities'] = affinities.copy()
+
+    def update_all_cell_types_for_adhesion_affinities(self, default_affinity: float = 1.0) -> None:
+        """Populate adhesion affinities so every cell type has an entry for every other.
+
+        Existing non-default entries are preserved. The placeholder ``"default"``
+        key is removed and replaced with explicit per-cell-type entries.
+
+        Parameters
+        ----------
+        default_affinity:
+            Default affinity value for missing entries.
+        """
+        all_names = list(self.cell_types.keys())
+        for cell_type_name in all_names:
+            existing = self.cell_types[cell_type_name]['phenotype']['mechanics'].get(
+                'cell_adhesion_affinities', {})
+            # Remove placeholder
+            existing.pop('default', None)
+            new_affinities = {}
+            for name in all_names:
+                new_affinities[name] = existing.get(name, default_affinity)
+            self.cell_types[cell_type_name]['phenotype']['mechanics']['cell_adhesion_affinities'] = new_affinities
+
+    def set_phagocytosis_rates(self, cell_type: str, apoptotic: float = None,
+                               necrotic: float = None, other_dead: float = None) -> None:
+        """Set dead-cell phagocytosis rates.
+
+        Parameters
+        ----------
+        cell_type:
+            Name of the cell type.
+        apoptotic:
+            Rate for phagocytosing apoptotic cells.
+        necrotic:
+            Rate for phagocytosing necrotic cells.
+        other_dead:
+            Rate for phagocytosing other dead cells.
+
+        Example
+        -------
+        >>> config.cell_types.set_phagocytosis_rates('M0 macrophage',
+        ...     apoptotic=0.01, necrotic=0.01, other_dead=0.01)
+        """
+        if cell_type not in self.cell_types:
+            raise ValueError(f"Cell type '{cell_type}' not found")
+
+        interactions = self.cell_types[cell_type]['phenotype']['cell_interactions']
+        if apoptotic is not None:
+            self._validate_non_negative_number(apoptotic, "apoptotic phagocytosis rate")
+            interactions['apoptotic_phagocytosis_rate'] = apoptotic
+        if necrotic is not None:
+            self._validate_non_negative_number(necrotic, "necrotic phagocytosis rate")
+            interactions['necrotic_phagocytosis_rate'] = necrotic
+        if other_dead is not None:
+            self._validate_non_negative_number(other_dead, "other dead phagocytosis rate")
+            interactions['other_dead_phagocytosis_rate'] = other_dead
+
+    def set_attack_rate(self, cell_type: str, target_cell_type: str, rate: float) -> None:
+        """Set the attack rate for one cell type attacking another.
+
+        Parameters
+        ----------
+        cell_type:
+            The attacking cell type.
+        target_cell_type:
+            The cell type being attacked.
+        rate:
+            Attack rate in 1/min.
+
+        Example
+        -------
+        >>> config.cell_types.set_attack_rate('effector T cell',
+        ...     'malignant epithelial cell', 0.01)
+        """
+        if cell_type not in self.cell_types:
+            raise ValueError(f"Cell type '{cell_type}' not found")
+        self._validate_non_negative_number(rate, "attack rate")
+
+        interactions = self.cell_types[cell_type]['phenotype']['cell_interactions']
+        if 'attack_rates' not in interactions:
+            interactions['attack_rates'] = {}
+        interactions['attack_rates'][target_cell_type] = rate
+
+    def set_attack_parameters(self, cell_type: str, damage_rate: float = None,
+                              duration: float = None) -> None:
+        """Set attack damage rate and duration.
+
+        Parameters
+        ----------
+        cell_type:
+            Name of the cell type.
+        damage_rate:
+            Attack damage rate in 1/min.
+        duration:
+            Attack duration in min.
+
+        Example
+        -------
+        >>> config.cell_types.set_attack_parameters('effector T cell',
+        ...     damage_rate=1.0, duration=0.1)
+        """
+        if cell_type not in self.cell_types:
+            raise ValueError(f"Cell type '{cell_type}' not found")
+
+        interactions = self.cell_types[cell_type]['phenotype']['cell_interactions']
+        if damage_rate is not None:
+            self._validate_non_negative_number(damage_rate, "attack damage rate")
+            interactions['attack_damage_rate'] = damage_rate
+        if duration is not None:
+            self._validate_non_negative_number(duration, "attack duration")
+            interactions['attack_duration'] = duration
+
+    def set_transformation_rate(self, cell_type: str, target_cell_type: str,
+                                 rate: float) -> None:
+        """Set the transformation rate from one cell type to another.
+
+        Parameters
+        ----------
+        cell_type:
+            The cell type that transforms.
+        target_cell_type:
+            The cell type it transforms into.
+        rate:
+            Transformation rate in 1/min.
+
+        Example
+        -------
+        >>> config.cell_types.set_transformation_rate('M1 macrophage',
+        ...     'M2 macrophage', 0.001)
+        """
+        if cell_type not in self.cell_types:
+            raise ValueError(f"Cell type '{cell_type}' not found")
+        self._validate_non_negative_number(rate, "transformation rate")
+
+        transformations = self.cell_types[cell_type]['phenotype']['cell_transformations']
+        if 'transformation_rates' not in transformations:
+            transformations['transformation_rates'] = {}
+        transformations['transformation_rates'][target_cell_type] = rate
+
+    def set_mechanics_parameters(self, cell_type: str, **params) -> None:
+        """Set mechanics parameters for a cell type.
+
+        Parameters
+        ----------
+        cell_type:
+            Name of the cell type.
+        **params:
+            Keyword arguments. Valid keys:
+            ``cell_cell_adhesion_strength``,
+            ``cell_cell_repulsion_strength``,
+            ``relative_maximum_adhesion_distance``,
+            ``attachment_elastic_constant``,
+            ``attachment_rate``,
+            ``detachment_rate``,
+            ``maximum_number_of_attachments``.
+
+        Example
+        -------
+        >>> config.cell_types.set_mechanics_parameters('M0 macrophage',
+        ...     cell_cell_adhesion_strength=0.0,
+        ...     relative_maximum_adhesion_distance=1.5,
+        ... )
+        """
+        if cell_type not in self.cell_types:
+            raise ValueError(f"Cell type '{cell_type}' not found")
+
+        valid_keys = {
+            'cell_cell_adhesion_strength',
+            'cell_cell_repulsion_strength',
+            'relative_maximum_adhesion_distance',
+            'attachment_elastic_constant',
+            'attachment_rate',
+            'detachment_rate',
+            'maximum_number_of_attachments',
+        }
+        for key in params:
+            if key not in valid_keys:
+                raise ValueError(f"Invalid mechanics parameter '{key}'. Valid: {valid_keys}")
+
+        self.cell_types[cell_type]['phenotype']['mechanics'].update(params)
+
+    def set_custom_data(self, cell_type: str, key: str, value,
+                        units: str = 'dimensionless', description: str = '',
+                        conserved: bool = False) -> None:
+        """Add or update a custom data entry for a cell type.
+
+        Parameters
+        ----------
+        cell_type:
+            Name of the cell type.
+        key:
+            Name of the custom data variable.
+        value:
+            Value of the variable (numeric or string).
+        units:
+            Unit string (default ``'dimensionless'``).
+        description:
+            Optional description.
+        conserved:
+            Whether the quantity is conserved.
+
+        Example
+        -------
+        >>> config.cell_types.set_custom_data('M0 macrophage', 'sample',
+        ...     value=0.0, units='dimensionless')
+        """
+        if cell_type not in self.cell_types:
+            raise ValueError(f"Cell type '{cell_type}' not found")
+
+        self.cell_types[cell_type]['custom_data'][key] = {
+            'value': value,
+            'units': units,
+            'description': description,
+            'conserved': conserved,
+        }
+
+    def clear_custom_data(self, cell_type: str) -> None:
+        """Remove all custom data entries for a cell type.
+
+        Parameters
+        ----------
+        cell_type:
+            Name of the cell type.
+        """
+        if cell_type not in self.cell_types:
+            raise ValueError(f"Cell type '{cell_type}' not found")
+        self.cell_types[cell_type]['custom_data'].clear()
+
     def set_volume_parameters(self, cell_type: str, total: float = None, 
                             nuclear: float = None, fluid_fraction: float = None) -> None:
         """Set volume parameters for a cell type."""
@@ -435,7 +828,10 @@ class CellTypeModule(BaseModule):
             model_config = {}
         
         # Add phase transition rates (new comprehensive format)
-        transition_rates = cycle.get('transition_rates', model_config.get('transition_rates', []))
+        if 'transition_rates' in cycle:
+            transition_rates = cycle['transition_rates']
+        else:
+            transition_rates = model_config.get('transition_rates', [])
         if transition_rates:
             rates_elem = self._create_element(cycle_elem, "phase_transition_rates")
             rates_elem.set("units", "1/min")
@@ -455,7 +851,7 @@ class CellTypeModule(BaseModule):
                 
                 rate_elem.set("fixed_duration", str(fixed_duration).lower())
         
-        # Legacy support for old phase_durations format (deprecated but kept for compatibility)
+        # Phase durations format (alternative to transition rates, both supported by PhysiCell)
         elif 'phase_durations' in cycle and cycle['phase_durations']:
             phase_durations_elem = self._create_element(cycle_elem, "phase_durations")
             phase_durations_elem.set("units", "min")
