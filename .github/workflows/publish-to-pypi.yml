@@ -26,17 +26,10 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -e .
+        pip install pytest
     
-    - name: Test package import
-      run: |
-        python -c "import physicell_config; print('✅ Package imported successfully')"
-        python -c "from physicell_config import PhysiCellConfig; config = PhysiCellConfig(); print('✅ PhysiCellConfig instantiated successfully')"
-    
-    - name: Run validation script
-      run: |
-        # Note: validation script may report warnings in CI due to example scripts having import path issues
-        # This is expected behavior and doesn't affect package installation
-        python validate_configs.py || echo "⚠️ Validation script completed with warnings (expected in CI)"
+    - name: Run tests
+      run: pytest tests/ -v
 
   build:
     name: Build distribution packages
