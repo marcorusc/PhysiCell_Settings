@@ -52,38 +52,7 @@ config.cell_types.add_cell_type(
 config.save("PhysiCell_settings.xml")
 ```
 
-## 🔄 **NEW: Bidirectional XML Support**
-
-**Load, modify, and save existing PhysiCell configurations!**
-
-```python
-# Load existing PhysiCell configuration
-config = PhysiCellConfig()
-config.load_xml("existing_simulation.xml")
-
-# Modify as needed
-config.domain.set_bounds(-600, 600, -400, 400)
-config.substrates.add_substrate("my_drug", diffusion_coefficient=1000.0)
-
-# Add cell rules
-rules = config.cell_rules_csv
-rules.add_rule("cancer_cell", "oxygen", "decreases", "necrosis", 0, 3.75, 8, 0)
-
-# Save modified configuration
-config.save_xml("modified_simulation.xml")
-```
-
-**Features:**
-
-- ✅ **Complete XML Loading** - Load any existing PhysiCell configuration
-- ✅ **Perfect Data Preservation** - Round-trip loading maintains all data
-- ✅ **PhysiBOSS Support** - Full intracellular model loading and saving
-- ✅ **Robust Validation** - Clear error messages for invalid XML files
-- ✅ **Cell Rules Integration** - Preserve and modify existing rule configurations
-
-[📖 **Full Documentation: BIDIRECTIONAL_XML_SUPPORT.md**](BIDIRECTIONAL_XML_SUPPORT.md)
-
-## 🚧 Development Status
+##  Development Status
 
 **Current Version:** 0.5.0
 

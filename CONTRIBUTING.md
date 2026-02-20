@@ -6,32 +6,33 @@ Thank you for your interest in contributing to the PhysiCell Configuration Build
 
 ### Prerequisites
 
-- Python 3.7 or higher
+- Python 3.8 or higher
 - Basic knowledge of PhysiCell and XML
 - Familiarity with Git and GitHub
 
 ### Development Setup
 
 1. **Fork the repository**
+
    ```bash
    # Fork on GitHub, then clone your fork
    git clone https://github.com/YOUR-USERNAME/physicell-config.git
    cd physicell-config
    ```
-
 2. **Set up development environment**
+
    ```bash
    # Create virtual environment (recommended)
    python -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
-   
+
    # Install in development mode
    pip install -e .
    ```
-
 3. **Run tests to ensure everything works**
+
    ```bash
-   python physicell_config/test_config.py
+   pytest tests/ -v
    ```
 
 ## 🛠️ Development Workflow
@@ -39,31 +40,29 @@ Thank you for your interest in contributing to the PhysiCell Configuration Build
 ### Making Changes
 
 1. **Create a feature branch**
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
-
 2. **Make your changes**
+
    - Follow existing code style and patterns
    - Add tests for new functionality
    - Update documentation as needed
-
 3. **Test your changes**
+
    ```bash
    # Run the full test suite
-   python physicell_config/test_config.py
-   
-   # Test specific functionality
-   python -c "from physicell_config import PhysiCellConfig; print('Import successful')"
+   pytest tests/ -v
    ```
-
 4. **Commit your changes**
+
    ```bash
    git add .
    git commit -m "Add feature: descriptive commit message"
    ```
-
 5. **Push and create pull request**
+
    ```bash
    git push origin feature/your-feature-name
    # Then create a Pull Request on GitHub
@@ -83,29 +82,30 @@ Thank you for your interest in contributing to the PhysiCell Configuration Build
 ```python
 def add_substrate(self, name: str, diffusion_coefficient: float = 1000.0,
                  decay_rate: float = 0.1, initial_condition: float = 0.0,
-                 units: str = "dimensionless") -> 'PhysiCellConfig':
+                 dirichlet_enabled: bool = False, dirichlet_value: float = 0.0,
+                 units: str = 'dimensionless', initial_units: str = 'mmHg') -> None:
     """
     Add a substrate to the microenvironment.
-    
+
     Args:
         name: Substrate name
         diffusion_coefficient: Diffusion coefficient (micron^2/min)
         decay_rate: Decay rate (1/min)
         initial_condition: Initial concentration
+        dirichlet_enabled: Whether Dirichlet boundary condition is active
+        dirichlet_value: Dirichlet boundary condition value
         units: Concentration units
-    
-    Returns:
-        Self for method chaining
-    
+        initial_units: Units for the initial condition
+
     Raises:
         ValueError: If substrate name is empty or already exists
     """
     if not name:
         raise ValueError("Substrate name cannot be empty")
-    
+  
     if name in self.substrates:
         raise ValueError(f"Substrate '{name}' already exists")
-    
+  
     self.substrates[name] = {
         'diffusion_coefficient': float(diffusion_coefficient),
         'decay_rate': float(decay_rate),
@@ -159,7 +159,6 @@ Before implementing major features:
 ### High Priority
 
 - **More PhysiCell examples** - Reproduce published models
-- **Additional cell cycle models** - Support more PhysiCell cycle types
 - **ECM support** - Extracellular matrix configuration
 - **Performance optimization** - For large configurations
 - **Error handling improvements** - Better validation and error messages
@@ -173,7 +172,6 @@ Before implementing major features:
 
 ### Nice to Have
 
-- **GUI wrapper** - Simple interface for non-programmers
 - **Jupyter notebook integration** - Interactive configuration
 - **Configuration visualization** - Graphical representation
 - **Migration tools** - Convert between PhysiCell versions
@@ -231,6 +229,7 @@ What should happen
 
 **Additional Context**
 Any other relevant information
+
 ```
 
 ### Feature Requests
@@ -253,14 +252,15 @@ Other ways to accomplish the same goal
 
 **Additional Context**
 Links to PhysiCell documentation, papers, etc.
+
 ```
 
 ## 🌟 Recognition
 
 Contributors will be:
 
-- **Listed in CONTRIBUTORS.md**
-- **Credited in release notes** for significant contributions
+- **Credited in release notes** for significant contributions (see [CHANGELOG.md](CHANGELOG.md))
+- **Acknowledged in the README** Contributors section
 - **Mentioned in documentation** for major features
 - **Invited to co-author** papers using this tool (for substantial contributions)
 
@@ -278,35 +278,33 @@ This project uses automated GitHub Actions workflows for testing and deployment 
 
 1. **Update version number** in `setup.py`:
    ```python
-   version="0.3.5",  # Update to new version
-   ```
+   version="X.Y.Z",
+```
 
 2. **Update CHANGELOG.md** with release notes
-
 3. **Commit and push changes**:
+
    ```bash
    git add setup.py CHANGELOG.md
-   git commit -m "Bump version to 0.3.5"
+   git commit -m "chore: bump version to X.Y.Z"
    git push
    ```
-
 4. **Create and push a version tag**:
+
    ```bash
-   git tag -a v0.3.5 -m "Release version 0.3.5"
-   git push origin v0.3.5
+   git tag -a vX.Y.Z -m "Release version X.Y.Z"
+   git push origin vX.Y.Z
    ```
 
 ### Automated Deployment Workflow
 
-When a version tag (e.g., `v0.3.5`) is pushed:
+When a version tag (e.g., `vX.Y.Z`) is pushed:
 
-1. **Test Job** - Package is tested on Python 3.8, 3.9, 3.10, 3.11, and 3.12
+1. **Test Job** - Full `pytest` suite on Python 3.8, 3.9, 3.10, 3.11, and 3.12
 2. **Build Job** - Distribution packages (sdist and wheel) are built and validated
 3. **Publish Job** - Package is automatically published to PyPI (if all tests pass)
 
 **Note**: The `PYPI_API_TOKEN` secret must be configured in the repository settings for deployment to work.
-
-For more details, see [`.github/workflows/README.md`](.github/workflows/README.md).
 
 ## 🙏 Thank You
 
@@ -322,4 +320,4 @@ Every contribution helps make this tool better for the PhysiCell community. Whet
 
 ---
 
-Ready to contribute? Check out our [good first issues](https://github.com/your-username/physicell-config/labels/good%20first%20issue) to get started!
+Ready to contribute? Check out our [good first issues](https://github.com/mruscone/PhysiCell_Settings/labels/good%20first%20issue) to get started!

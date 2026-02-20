@@ -7,11 +7,11 @@ This directory contains the GitHub Actions workflow for automatically testing an
 ### Trigger
 The workflow is triggered when you push a version tag to the repository:
 ```bash
-git tag v0.3.5
-git push origin v0.3.5
+git tag vX.Y.Z
+git push origin vX.Y.Z
 ```
 
-Tags must match the pattern `v*` (e.g., `v1.0.0`, `v0.3.5`, `v2.1.0-beta`).
+Tags must match the pattern `v*` (e.g., `v1.0.0`, `v0.5.0`, `v2.1.0-beta`).
 
 ### Workflow Jobs
 
@@ -25,8 +25,7 @@ The workflow consists of three sequential jobs:
   1. Check out the repository
   2. Set up Python (matrix strategy for multiple versions)
   3. Install the package in editable mode
-  4. Test basic package imports
-  5. Run the validation script
+  4. Run the full `pytest` test suite across all supported Python versions
 
 #### 2. **Build** (`build`)
 - **Purpose**: Build distribution packages (source distribution and wheel)
@@ -71,7 +70,7 @@ To release a new version of the package:
 
 1. **Update the version number** in `setup.py`:
    ```python
-   version="0.3.5",  # Update this
+   version="X.Y.Z",
    ```
 
 2. **Update the CHANGELOG.md** with release notes
@@ -79,14 +78,14 @@ To release a new version of the package:
 3. **Commit your changes**:
    ```bash
    git add setup.py CHANGELOG.md
-   git commit -m "Bump version to 0.3.5"
+   git commit -m "chore: bump version to X.Y.Z"
    git push
    ```
 
 4. **Create and push a version tag**:
    ```bash
-   git tag -a v0.3.5 -m "Release version 0.3.5"
-   git push origin v0.3.5
+   git tag -a vX.Y.Z -m "Release version X.Y.Z"
+   git push origin vX.Y.Z
    ```
 
 5. **Monitor the workflow**:
