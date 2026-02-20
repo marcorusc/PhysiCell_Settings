@@ -131,21 +131,35 @@ Below is a complete list of public helpers available in each module.
 
 ### CellTypeModule
 - `add_cell_type(name, parent_type='default', template='default')` – create a new cell type from a template.
-- `set_cycle_model(cell_type, model)` – assign a cycle model.
-- `set_cycle_transition_rate(cell_type, from_phase, to_phase, rate)` – override specific cycle transitions.
-- `set_death_rate(cell_type, death_type, rate)` – change apoptosis or necrosis rates.
+- `set_cycle_model(cell_type, model)` – assign a cycle model (`Ki67_basic`, `Ki67_advanced`, `live`, `cycling_quiescent`, `flow_cytometry`, `flow_cytometry_separated`).
+- `set_cycle_transition_rate(cell_type, from_phase, to_phase, rate)` – override a specific phase transition rate.
+- `set_cycle_phase_durations(cell_type, durations)` – set cycle phase durations as a list of `{index, duration, fixed_duration}` dicts; clears any transition rates so `<phase_durations>` is used in the XML output. Both formats are valid in PhysiCell.
+- `set_death_rate(cell_type, death_type, rate)` – set the base death rate for `'apoptosis'` or `'necrosis'`.
+- `set_death_parameters(cell_type, death_type, **params)` – set death model sub-parameters: `unlysed_fluid_change_rate`, `lysed_fluid_change_rate`, `cytoplasmic_biomass_change_rate`, `nuclear_biomass_change_rate`, `calcification_rate`, `relative_rupture_volume`.
+- `set_death_phase_durations(cell_type, death_type, durations)` – set death phase durations; removes any existing `phase_transition_rates`.
+- `set_death_phase_transition_rates(cell_type, death_type, rates)` – set death phase transition rates as a list of `{start_index, end_index, rate, fixed_duration}` dicts; removes any existing `phase_durations`.
 - `set_volume_parameters(cell_type, total=None, nuclear=None, fluid_fraction=None)` – adjust volume attributes.
 - `set_motility(cell_type, speed=None, persistence_time=None, migration_bias=None, enabled=None)` – configure motility.
 - `set_chemotaxis(cell_type, substrate, enabled=True, direction=1)` – simple chemotaxis towards a substrate.
 - `set_advanced_chemotaxis(cell_type, substrate_sensitivities, enabled=True, normalize_each_gradient=False)` – multi‑substrate chemotaxis.
 - `add_secretion(cell_type, substrate, secretion_rate, secretion_target=1.0, uptake_rate=0.0, net_export_rate=0.0)` – add secretion parameters.
 - `update_all_cell_types_for_substrates()` – ensure secretion parameters exist for all substrates.
+- `set_cell_adhesion_affinities(cell_type, affinities)` – set per-cell-type adhesion affinities from a `{target_name: value}` dict; replaces any existing affinities.
+- `update_all_cell_types_for_adhesion_affinities(default_affinity=1.0)` – populate adhesion affinities so every cell type has an explicit entry for every other; preserves existing non-default values.
+- `set_phagocytosis_rates(cell_type, apoptotic=None, necrotic=None, other_dead=None)` – set dead-cell phagocytosis rates.
+- `set_attack_rate(cell_type, target_cell_type, rate)` – set the rate at which `cell_type` attacks `target_cell_type`.
+- `set_attack_parameters(cell_type, damage_rate=None, duration=None)` – set attack damage rate and duration.
+- `set_transformation_rate(cell_type, target_cell_type, rate)` – set the rate at which `cell_type` transforms into `target_cell_type`.
+- `set_mechanics_parameters(cell_type, **params)` – set any combination of mechanics parameters: `cell_cell_adhesion_strength`, `cell_cell_repulsion_strength`, `relative_maximum_adhesion_distance`, `attachment_elastic_constant`, `attachment_rate`, `detachment_rate`, `maximum_number_of_attachments`.
+- `set_custom_data(cell_type, key, value, units='dimensionless', description='', conserved=False)` – add or update a custom data entry.
+- `clear_custom_data(cell_type)` – remove all custom data entries for a cell type.
+- `update_all_cell_types_for_interactions()` – populate live phagocytosis, attack, fusion, and transformation rate dicts for all defined cell types with zero defaults.
 - `add_intracellular_model(cell_type, model_type='maboss', bnd_filename='', cfg_filename='')` – attach an intracellular model.
 - `set_intracellular_settings(cell_type, intracellular_dt=None, time_stochasticity=None, scaling=None, start_time=None, inheritance_global=None)` – tweak intracellular options.
 - `add_intracellular_mutation(cell_type, intracellular_name, value)` – force a node value.
 - `add_intracellular_initial_value(cell_type, intracellular_name, value)` – set initial node value.
-- `add_intracellular_input(cell_type, physicell_name, intracellular_name, action='activation', threshold=1, smoothing=0)` – map a substrate or variable to a node.
-- `add_intracellular_output(cell_type, physicell_name, intracellular_name, action='activation', value=1000000, base_value=0, smoothing=0)` – map a node to a behavior.
+- `add_intracellular_input(cell_type, physicell_name, intracellular_name, action='activation', threshold=1, smoothing=0)` – map a substrate or variable to a network node.
+- `add_intracellular_output(cell_type, physicell_name, intracellular_name, action='activation', value=1000000, base_value=0, smoothing=0)` – map a network node to a behavior.
 - `add_to_xml(parent)` – serialize cell definitions to XML.
 - `get_cell_types()` – return all stored cell type data.
 
@@ -239,18 +253,15 @@ Below is a complete list of public helpers available in each module.
 ## Package Weaknesses and Possible Improvements
 While the package offers a comprehensive API, several aspects could be enhanced:
 
-1. **Limited automated testing** – `test_modular.py` acts mostly as a demo.
-   Adding unit tests for each module and integrating continuous integration would
-   improve reliability.
-2. **Sparse documentation for advanced features** – some complex methods
+1. **Sparse documentation for advanced features** – some complex methods
    lack detailed examples. Extended tutorials and docstrings would ease adoption.
-3. **Validation gaps** – configuration validation currently checks only a few
+2. **Validation gaps** – configuration validation currently checks only a few
    conditions. More thorough checks (e.g. verifying cross‑module consistency) can
    prevent runtime errors.
-4. **No explicit versioned schema** – the XML generation assumes a single
+3. **No explicit versioned schema** – the XML generation assumes a single
    schema. Providing version compatibility layers or schema definitions would help
    long‑term maintenance.
-5. **Dependency on large JSON defaults** – modifying default parameters requires
+4. **Dependency on large JSON defaults** – modifying default parameters requires
    editing JSON files manually. A helper API for managing these defaults could
    simplify customization.
 
