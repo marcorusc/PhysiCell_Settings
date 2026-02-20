@@ -19,6 +19,7 @@ pip install physicell-settings
 ```
 
 **Requirements:**
+
 - Python 3.8 or higher
 - No external dependencies (uses only Python standard library)
 
@@ -73,6 +74,7 @@ config.save_xml("modified_simulation.xml")
 ```
 
 **Features:**
+
 - ✅ **Complete XML Loading** - Load any existing PhysiCell configuration
 - ✅ **Perfect Data Preservation** - Round-trip loading maintains all data
 - ✅ **PhysiBOSS Support** - Full intracellular model loading and saving
@@ -83,29 +85,9 @@ config.save_xml("modified_simulation.xml")
 
 ## 🚧 Development Status
 
-**Current Version:** 0.1.0 (Beta)
+**Current Version:** 0.5.0
 
-This package is currently in active development. While it's functional and available on PyPI, some features are still being refined and additional functionality is being added.
-
-### ✅ **What's Working:**
-- Core configuration generation
-- All major PhysiCell modules (domain, substrates, cell types, etc.)
-- PyPI installation and basic usage
-- Modular architecture
-
-### 🔄 **In Progress:**
-- Additional validation and error handling
-- Enhanced documentation and examples
-- Extended API coverage for advanced features
-- Performance optimizations
-
-### 📋 **Planned Features:**
-- Advanced parameter validation
-- Configuration templates
-- Migration tools from legacy formats
-- Enhanced PhysiBoSS integration
-
-**Note:** The repository is currently private as we finalize features and documentation. The package is stable for basic use cases.
+This package is stable and actively maintained. All core features are working and covered by regression tests.
 
 ## ✨ Key Features
 
@@ -287,11 +269,13 @@ config.cell_rules.load_rules_from_csv("cell_rules.csv")
 ## 🧪 Testing and Validation
 
 ### Run Demo
+
 ```bash
 python demo_modular.py
 ```
 
 ### Configuration Validation
+
 ```python
 # Built-in validation
 issues = config.validate()
@@ -338,6 +322,7 @@ physicell_config/
 ## 🔧 Advanced Features
 
 ### PhysiBoSS Integration
+
 ```python
 # Enable PhysiBoSS boolean networks
 config.physiboss.enable_physiboss("boolean_model.bnd")
@@ -346,6 +331,7 @@ config.physiboss.add_initial_value("EGFR", True)
 ```
 
 ### Complex Initial Conditions
+
 ```python
 # Multiple initial condition types
 config.initial_conditions.add_cell_cluster("cancer", 0, 0, radius=100)
@@ -354,6 +340,7 @@ config.initial_conditions.add_rectangular_region("stromal", -300, 300, -300, 300
 ```
 
 ### Enhanced Visualization
+
 ```python
 # Advanced SVG options
 config.save_options.set_svg_options(
@@ -365,6 +352,7 @@ config.save_options.set_svg_options(
 ```
 
 ### Cell Rules CSV Generation
+
 ```python
 # Create cell rules CSV with context awareness
 rules = config.cell_rules_csv
@@ -383,6 +371,7 @@ rules.generate_csv("config/differentiation/rules.csv")
 ```
 
 ### PhysiBoSS Integration
+
 ```python
 # Add intracellular models to cell types
 config.cell_types.add_intracellular_model("T_cell", "maboss")
@@ -397,14 +386,14 @@ config.cell_types.add_intracellular_mutation("T_cell", "FOXP3", 0)
 We welcome contributions! The modular architecture makes it easy to:
 
 - Add new modules for additional PhysiCell features
-- Enhance existing modules with new functionality  
+- Enhance existing modules with new functionality
 - Improve documentation and examples
 - Add comprehensive test suites
 
 ## 📧 Support & Contact
 
 - **Author:** Marco Ruscone
-- **Email:** ym.ruscone94@gmail.com
+- **Email:** m.ruscone94@gmail.com
 - **PyPI:** https://pypi.org/project/physicell-settings/
 
 For questions, suggestions, or bug reports, please feel free to reach out via email.
@@ -417,3 +406,9 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 
 - PhysiCell development team for creating the simulation framework
 - The open-source community for inspiration and best practices
+
+### Contributors
+
+Thanks to our external contributors:
+
+- [@zacsims](https://github.com/zacsims) — fixed Dirichlet boundary boolean attribute casing (`enabled="False"` → `enabled="false"`) in the XML output ([#5](https://github.com/mruscone/PhysiCell_Settings/pull/5))
