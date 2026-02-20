@@ -49,24 +49,8 @@ def create_basic_config():
     config.cell_types.add_cell_type(name='default')
     config.cell_types.set_cycle_model('default', 'flow_cytometry_separated')
     
-    # Override to use phase_durations to match example
-    config.cell_types.cell_types['default']['phenotype']['cycle']['phase_durations'] = [
-        {'index': 0, 'duration': 300.0, 'fixed_duration': False},
-        {'index': 1, 'duration': 480.0, 'fixed_duration': True},
-        {'index': 2, 'duration': 240.0, 'fixed_duration': True},
-        {'index': 3, 'duration': 60.0, 'fixed_duration': True}
-    ]
-    # Remove transition_rates if present
-    if 'transition_rates' in config.cell_types.cell_types['default']['phenotype']['cycle']:
-        del config.cell_types.cell_types['default']['phenotype']['cycle']['transition_rates']
-    
     # Set custom data for default cell
-    config.cell_types.cell_types['default']['custom_data']['sample'] = {
-        'value': 1.0,
-        'units': 'dimensionless',
-        'description': '',
-        'conserved': False
-    }
+    config.cell_types.set_custom_data('default', 'sample', value=1.0)
     
     # Initial conditions - disabled by default
     config.initial_conditions.add_csv_file('cells.csv', './config', enabled=False)

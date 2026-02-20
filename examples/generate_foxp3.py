@@ -100,24 +100,23 @@ def create_foxp3_config():
         config.cell_types.set_volume_parameters(name, total=2494, nuclear=540, fluid_fraction=0.75)
         
         # Mechanics parameters
-        config.cell_types.cell_types[name]['phenotype']['mechanics'].update({
-            'cell_cell_adhesion_strength': 0.4,
-            'cell_cell_repulsion_strength': 10.0,
-            'relative_maximum_adhesion_distance': 1.25,
-            'attachment_elastic_constant': 0.0,
-            'attachment_rate': 0.0,
-            'detachment_rate': 0.0
-        })
+        config.cell_types.set_mechanics_parameters(name,
+            cell_cell_adhesion_strength=0.4,
+            cell_cell_repulsion_strength=10.0,
+            relative_maximum_adhesion_distance=1.25,
+            attachment_elastic_constant=0.0,
+            attachment_rate=0.0,
+            detachment_rate=0.0
+        )
         
         # Custom data
-        config.cell_types.cell_types[name]['custom_data'] = {
-            'somedata': {
-                'value': 1.0 if name != 'endothelial_cell' else 0.0,
-                'conserved': False,
-                'units': 'dimensionless',
-                'description': ''
-            }
-        }
+        config.cell_types.clear_custom_data(name)
+        config.cell_types.set_custom_data(name, 'somedata',
+            value=1.0 if name != 'endothelial_cell' else 0.0,
+            units='dimensionless',
+            description='',
+            conserved=False
+        )
     
     # Configure specific cell type properties
     # T0 cell (ID=0) - has detailed configuration and intracellular model
@@ -136,14 +135,14 @@ def create_foxp3_config():
     }
     
     # Add cell adhesion affinities for T0
-    config.cell_types.cell_types['T0']['phenotype']['mechanics']['cell_adhesion_affinities'] = {
+    config.cell_types.set_cell_adhesion_affinities('T0', {
         'Th1': 1.0,
         'Th17': 1.0,
         'dendritic_cell': 1.0,
         'T0': 1.0,
         'Treg': 1.0,
         'endothelial_cell': 1.0
-    }
+    })
     
     # Add T0 intracellular model
     config.physiboss.add_intracellular_model('T0', 'maboss',
