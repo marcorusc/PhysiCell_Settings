@@ -7,7 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.4.5] - 2025-12-15
+## [0.5.0] - 2026-02-20
+
+### Added
+- `set_cycle_phase_durations(cell_type, durations)` — set cycle phase durations and suppress model-default transition rates so `<phase_durations>` is emitted. Both formats are valid in PhysiCell.
+- `set_death_parameters(cell_type, death_type, **params)` — set death model sub-parameters (`unlysed_fluid_change_rate`, `lysed_fluid_change_rate`, `cytoplasmic_biomass_change_rate`, `nuclear_biomass_change_rate`, `calcification_rate`, `relative_rupture_volume`) without direct dict manipulation.
+- `set_death_phase_durations(cell_type, death_type, durations)` — set death phase durations; automatically removes any `phase_transition_rates`.
+- `set_death_phase_transition_rates(cell_type, death_type, rates)` — set death phase transition rates; automatically removes any `phase_durations`.
+- `set_cell_adhesion_affinities(cell_type, affinities)` — set per-cell-type adhesion affinity values from a dict.
+- `update_all_cell_types_for_adhesion_affinities(default_affinity=1.0)` — populate adhesion affinities for every cell type against every other, preserving existing non-default values.
+- `set_phagocytosis_rates(cell_type, apoptotic, necrotic, other_dead)` — set dead-cell phagocytosis rates.
+- `set_attack_rate(cell_type, target_cell_type, rate)` — set an attack rate against a specific cell type.
+- `set_attack_parameters(cell_type, damage_rate, duration)` — set attack damage rate and duration.
+- `set_transformation_rate(cell_type, target_cell_type, rate)` — set a cell type transformation rate.
+- `set_mechanics_parameters(cell_type, **params)` — set any mechanics parameters (`cell_cell_adhesion_strength`, `relative_maximum_adhesion_distance`, `attachment_elastic_constant`, etc.) without direct dict manipulation.
+- `set_custom_data(cell_type, key, value, units, description, conserved)` — add or update a custom data entry.
+- `clear_custom_data(cell_type)` — remove all custom data entries for a cell type.
+
+### Fixed
+- `_add_cycle_xml`: the fallback logic now checks key presence (`'transition_rates' in cycle`) instead of using `.get()`, so setting `transition_rates = []` correctly prevents model defaults from being used and allows `phase_durations` to take effect.
+- Fixed misleading comment that labelled `phase_durations` as "legacy/deprecated". Both `phase_durations` and `phase_transition_rates` are actively supported by PhysiCell.
+- Normalized `enabled="False"` → `enabled="false"` in all Dirichlet boundary XML attributes (credit: [@zacsims](https://github.com/zacsims)).
+
+### Changed
+- `examples/generate_basic.py`: replaced direct internal dict manipulation with `set_custom_data()`.
+- `examples/generate_foxp3.py`: replaced direct internal dict manipulation with `set_mechanics_parameters()`, `set_cell_adhesion_affinities()`, `clear_custom_data()`, and `set_custom_data()`.
+- CI/CD now runs the full `pytest` test suite instead of the legacy `validate_configs.py` script.
+
+
 
 ### Changed
 - Bumped version to 0.4.5 to align with PyPI releases.
