@@ -113,3 +113,4 @@ publish_to_pypi.sh
 
 # Copilot
 .github/copilot-instructions.md
+site/

@@ -1,0 +1,67 @@
+site_name: PhysiCell Settings
+site_description: Python package for generating PhysiCell_settings.xml configuration files
+site_url: https://marcorusc.github.io/PhysiCell_Settings/
+repo_url: https://github.com/marcorusc/PhysiCell_Settings
+repo_name: marcorusc/PhysiCell_Settings
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: teal
+      accent: cyan
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: teal
+      accent: cyan
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+# Dependencies: mkdocs<2, mkdocs-material, mkdocstrings[python]
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: numpy
+            show_source: false
+            show_root_heading: true
+            show_root_full_path: false
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            members_order: source
+            separate_signature: true
+            show_signature_annotations: true
+
+nav:
+  - Home: index.md
+  - API Reference: api_reference.md
+  - Advanced Features: AdvancedFeatures.md
+  - Handwritten API: API.md
+  - Contributing: contributing.md
+
+markdown_extensions:
+  - pymdownx.snippets:
+      base_path: ['.']
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - admonition
+  - pymdownx.details
+  - attr_list
+  - toc:
+      permalink: true
