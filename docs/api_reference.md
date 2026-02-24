@@ -71,14 +71,6 @@ Auto-generated from source docstrings. For narrative usage examples see
 
 ---
 
-### CellRulesCSV
-
-::: physicell_config.modules.cell_rules_csv.CellRulesCSV
-    options:
-      heading_level: 4
-
----
-
 ### PhysiBoSSModule
 
 ::: physicell_config.modules.physiboss.PhysiBoSSModule

@@ -33,7 +33,6 @@ def test_direct_submodules_import():
         "physicell_config.modules.substrates",
         "physicell_config.modules.cell_types",
         "physicell_config.modules.cell_rules",
-        "physicell_config.modules.cell_rules_csv",
         "physicell_config.modules.physiboss",
         "physicell_config.modules.options",
         "physicell_config.modules.initial_conditions",

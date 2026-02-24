@@ -11,7 +11,6 @@ helpers to generate and save complete PhysiCell XML files.
 
 ### Methods
 - `__init__()` – instantiate the builder and all modules.
-- `cell_rules_csv` – property returning a `CellRulesCSV` helper with updated context.
 - `add_user_parameter(name, value, units='dimensionless', description='', parameter_type='double')` – register a custom user parameter.
 - `set_number_of_cells(count)` – convenience setter for the standard `number_of_cells` parameter.
 - `setup_basic_simulation(x_range=(-500,500), y_range=(-500,500), mesh_spacing=20.0, max_time=8640.0)` – configure domain, options and output for a common simulation.
@@ -55,15 +54,19 @@ Handles phenotype and behavioral properties for all cell types.
 - `add_ruleset(name, folder='./config', filename='rules.csv', enabled=True)` – declare a CSV ruleset to load during simulation.
 - `add_rule(cell_type, signal, direction, behavior, saturation_value=0.0, half_max=0.5, hill_power=4.0, apply_to_dead=0)` – add a rule following the CBHG v3.0 CSV format.
 - `load_rules_from_csv(filename)` / `save_rules_to_csv(filename)` – import or export rules in headerless PhysiCell CSV format.
+- `generate_csv(filename)` – alias for `save_rules_to_csv` that also prints a confirmation and returns the filename.
+- `remove_rule(index)` – delete a rule by zero-based index.
+- `validate_rules()` – validate all stored rules against the registry; returns a list of warning messages.
+- `update_context_from_config(config)` – sync available cell types and substrates from a config instance.
+- `get_available_signals(filter_by_type=None)` / `get_available_behaviors(filter_by_type=None)` – list known signals or behaviors, optionally filtered by type.
+- `get_signal_by_name(name)` / `get_behavior_by_name(name)` – look up a signal or behavior by human-readable name.
+- `get_context()` – return current context (cell types, substrates, custom variables).
 - `add_to_xml(parent)` – write the cell rules structure to XML.
 - `get_rules()` / `get_rulesets()` – return defined rules and rulesets.
-
-### CellRulesCSV
-Utility class for creating valid `cell_rules.csv` files.
-- Methods to list available signals/behaviors (`get_available_signals`, `get_available_behaviors`).
-- Context helpers (`update_context_from_config`, `get_context`).
-- `add_rule(cell_type, signal, direction, behavior, saturation_value, half_max, hill_power, apply_to_dead)` – add a rule in CSV layout and `generate_csv(filename)` to export.
-- Includes convenience `print_*` methods to display registry information.
+- `clear_rules()` / `clear_rulesets()` – reset rules or rulesets.
+- `print_available_signals(filter_by_type=None)` / `print_available_behaviors(filter_by_type=None)` – print signals or behaviors table.
+- `print_context()` – display current context.
+- `print_rules()` – display the rule list.
 
 ### OptionsModule
 - `set_max_time(max_time, units='min')` – total simulation time.
@@ -167,31 +170,25 @@ Below is a complete list of public helpers available in each module.
 - `add_ruleset(name, folder='./config', filename='rules.csv', enabled=True)` – register a CSV ruleset file.
 - `add_rule(cell_type, signal, direction, behavior, saturation_value=0.0, half_max=0.5, hill_power=4.0, apply_to_dead=0)` – store a rule following the CBHG v3.0 format.
 - `load_rules_from_csv(filename)` – import rules from a headerless PhysiCell CSV.
-- `save_rules_to_csv(filename)` – export current rules to headerless PhysiCell CSV.
-- `add_to_xml(parent)` – write the cell rules section.
-- `get_rules()` – list rule dictionaries.
-- `get_rulesets()` – list registered rulesets.
-- `clear_rules()` – remove all rules.
-- `clear_rulesets()` – remove all rulesets.
-
-### CellRulesCSV
+- `save_rules_to_csv(filename)` – export current rules to a headerless PhysiCell CSV.
+- `generate_csv(filename)` – alias for `save_rules_to_csv` that also prints a confirmation and returns the filename.
+- `remove_rule(index)` – delete a rule by zero-based index.
+- `validate_rules()` – return warnings or errors for the current rule set.
 - `update_context_from_config(config)` – refresh cell types and substrates from a config instance.
 - `get_available_signals(filter_by_type=None)` – list known signals.
 - `get_available_behaviors(filter_by_type=None)` – list known behaviors.
 - `get_context()` – inspect current context.
 - `get_signal_by_name(signal_name)` – look up a signal by name.
 - `get_behavior_by_name(behavior_name)` – look up a behavior by name.
-- `add_rule(cell_type, signal, direction, behavior, saturation_value, half_max, hill_power, apply_to_dead)` – append a CSV rule.
-- `remove_rule(index)` – delete a rule by index.
-- `get_rules()` – list stored rules.
+- `add_to_xml(parent)` – write the cell rules section.
+- `get_rules()` – list rule dictionaries.
+- `get_rulesets()` – list registered rulesets.
 - `clear_rules()` – remove all rules.
-- `generate_csv(filename)` – export a PhysiCell compatible CSV.
-- `validate_rules()` – return warnings or errors for the current rule set.
+- `clear_rulesets()` – remove all rulesets.
 - `print_available_signals(filter_by_type=None)` – print signals table.
 - `print_available_behaviors(filter_by_type=None)` – print behaviors table.
 - `print_context()` – display current context.
 - `print_rules()` – display the rule list.
-- `add_to_xml(parent)` – no-op placeholder for compatibility.
 
 ### OptionsModule
 - `set_max_time(max_time, units='min')` – simulation duration.

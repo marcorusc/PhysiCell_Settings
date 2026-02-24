@@ -34,7 +34,6 @@ from .modules.domain import DomainModule
 from .modules.substrates import SubstrateModule
 from .modules.cell_types import CellTypeModule
 from .modules.cell_rules import CellRulesModule
-from .modules.cell_rules_csv import CellRulesCSV
 from .modules.physiboss import PhysiBoSSModule
 from .modules.options import OptionsModule
 from .modules.initial_conditions import InitialConditionsModule
@@ -61,10 +60,7 @@ class PhysiCellConfig:
         self.options = OptionsModule(self)
         self.initial_conditions = InitialConditionsModule(self)
         self.save_options = SaveOptionsModule(self)
-        
-        # Cell rules CSV module (initialized on demand)
-        self._cell_rules_csv = None
-        
+
         # User parameters (automatically include PhysiCell standard parameters)
         self.user_parameters = {}
         self._add_standard_user_parameters()
@@ -175,30 +171,11 @@ class PhysiCellConfig:
         self.options = OptionsModule(self)
         self.initial_conditions = InitialConditionsModule(self)
         self.save_options = SaveOptionsModule(self)
-        
+
         # Reset other attributes
-        self._cell_rules_csv = None
         self.user_parameters = {}
         self._add_standard_user_parameters()
         self._ensure_default_substrate()
-    
-    @property
-    def cell_rules_csv(self) -> CellRulesCSV:
-        """
-        Get the cell rules CSV module with auto-updated context.
-        
-        This property initializes the CellRulesCSV module on first access
-        and always updates the context with current cell types and substrates.
-        
-        Returns:
-            CellRulesCSV instance with updated context
-        """
-        if self._cell_rules_csv is None:
-            self._cell_rules_csv = CellRulesCSV(self)
-        else:
-            self._cell_rules_csv.update_context_from_config(self)
-        
-        return self._cell_rules_csv
     
     def _add_standard_user_parameters(self) -> None:
         """Initialize standard user parameters that appear in PhysiCell templates."""
@@ -434,7 +411,7 @@ class PhysiCellConfig:
             'substrates': list(self.substrates.get_substrates().keys()),
             'cell_types': list(self.cell_types.get_cell_types().keys()),
             'user_parameters': list(self.user_parameters.keys()),
-            'num_rules': len(self.cell_rules_csv.get_rules()),
+            'num_rules': len(self.cell_rules.get_rules()),
             'num_rulesets': len(self.cell_rules.get_rulesets()),
             'physiboss_enabled': self.physiboss.is_enabled(),
             'initial_conditions': len(self.initial_conditions.get_conditions()),

@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="physicell-settings",
-    version="0.5.0",
+    version="0.6.0",
     author="Marco Ruscone",
     author_email="ym.ruscone94@gmail.com",
     description="User-friendly Python package for generating PhysiCell_settings.xml configuration files",

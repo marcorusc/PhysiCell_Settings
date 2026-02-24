@@ -8,9 +8,9 @@ to create PhysiCell-compatible rules CSV files.
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from config_builder_modular import PhysiCellConfig
+from physicell_config import PhysiCellConfig
 
 def create_cell_rules_example():
     """Create an example configuration with cell rules CSV generation."""
@@ -29,8 +29,9 @@ def create_cell_rules_example():
     config.substrates.add_substrate("glucose", diffusion_coefficient=500.0, decay_rate=0.05)
     config.substrates.add_substrate("growth_factor", diffusion_coefficient=100.0, decay_rate=0.01)
     
-    # 2. Access the cell rules CSV module (auto-updates context)
-    rules = config.cell_rules_csv
+    # 2. Access the unified cell rules module (auto-updates context)
+    rules = config.cell_rules
+    rules.update_context_from_config(config)
     
     # 3. Explore available options
     print("Current context after adding cell types and substrates:")
@@ -137,9 +138,9 @@ def create_cell_rules_example():
     print("="*60)
     print("You can now:")
     print("1. Use the generated CSV file with PhysiCell")
-    print("2. Add more rules using: config.cell_rules_csv.add_rule(...)")
-    print("3. Explore signals/behaviors using: config.cell_rules_csv.print_available_signals()")
-    print("4. Check context using: config.cell_rules_csv.print_context()")
+    print("2. Add more rules using: config.cell_rules.add_rule(...)")
+    print("3. Explore signals/behaviors using: config.cell_rules.print_available_signals()")
+    print("4. Check context using: config.cell_rules.print_context()")
 
 if __name__ == "__main__":
     create_cell_rules_example()

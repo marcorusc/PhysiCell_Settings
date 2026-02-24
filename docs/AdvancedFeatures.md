@@ -72,21 +72,25 @@ For the full method reference see [`docs/API.md`](API.md).
 
 - `add_ruleset(name, folder='./config', filename='rules.csv', enabled=True)` –
   register external rule files
-- `add_rule(...)` – create rules programmatically
+- `add_rule(cell_type, signal, direction, behavior, saturation_value, half_max, hill_power, apply_to_dead)` – create rules programmatically
 - `load_rules_from_csv(filename)` / `save_rules_to_csv(filename)` – interchange
   rules with CSV
+- `generate_csv(filename)` – produce a CSV ready for PhysiCell (alias for `save_rules_to_csv`)
+- `remove_rule(index)` – delete a rule by zero-based index
+- `validate_rules()` – check all rules against the embedded registry
 - `clear_rules()` / `clear_rulesets()` – reset configuration
 
-`cell_rules_csv.py` wraps these rules in a CSV oriented helper that is aware of
-available signals and behaviors. Key calls include:
+The module also provides signals/behaviors registry and context awareness,
+formerly in the separate `cell_rules_csv.py` helper:
 
+- `update_context_from_config(config)` – sync cell types and substrates from a config instance
 - `get_available_signals(filter_by_type=None)`
 - `get_available_behaviors(filter_by_type=None)`
 - `get_context()` – inspect current cell types, substrates and custom variables
-- `add_rule(cell_type, signal, direction, behavior, saturation_value, half_max, hill_power, apply_to_dead)`
-- `generate_csv(filename)` – produce a CSV ready for PhysiCell
+- `get_signal_by_name(name)` / `get_behavior_by_name(name)` – look up by name
+- `print_available_signals()` / `print_available_behaviors()` / `print_context()` / `print_rules()`
 
-The context awareness ensures that generated rules only reference entities
+Context awareness ensures that generated rules only reference entities
 present in the configuration.
 
 ## PhysiBoSS Integration

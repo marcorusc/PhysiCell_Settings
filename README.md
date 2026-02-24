@@ -94,8 +94,7 @@ The configuration builder uses a modular composition pattern that provides:
     ├── domain.py                # Simulation domain and mesh
     ├── substrates.py            # Microenvironment substrates  
     ├── cell_types.py            # Cell definitions and phenotypes
-    ├── cell_rules.py            # Cell behavior rules
-    ├── cell_rules_csv.py        # rules.csv generation with context awareness
+    ├── cell_rules.py            # Cell behavior rules and CSV generation with context awareness
     ├── physiboss.py             # PhysiBoSS boolean networks
     ├── initial_conditions.py    # Initial cell placement
     ├── save_options.py          # Output and visualization
@@ -324,8 +323,9 @@ config.save_options.set_svg_options(
 ### Cell Rules CSV Generation
 
 ```python
-# Create cell rules CSV with context awareness
-rules = config.cell_rules_csv
+# All cell rules functionality is in config.cell_rules
+rules = config.cell_rules
+rules.update_context_from_config(config)  # sync cell types / substrates
 
 # Explore available signals and behaviors
 rules.print_available_signals(filter_by_type="contact")
@@ -335,6 +335,9 @@ rules.print_context()  # Shows current cell types and substrates
 # Add rules following PhysiCell CSV format
 rules.add_rule("tumor", "oxygen", "decreases", "necrosis", 0, 3.75, 8, 0)
 rules.add_rule("tumor", "contact with immune_cell", "increases", "apoptosis", 0.1, 0.5, 4, 0)
+
+# Validate all rules against the embedded registry
+warnings = rules.validate_rules()
 
 # Generate PhysiCell-compatible CSV file
 rules.generate_csv("config/differentiation/rules.csv")
