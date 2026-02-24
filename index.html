@@ -1015,12 +1015,11 @@
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    ├── domain.py                # Simulation domain and mesh
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    ├── substrates.py            # Microenvironment substrates  
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    ├── cell_types.py            # Cell definitions and phenotypes
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    ├── cell_rules.py            # Cell behavior rules
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    ├── cell_rules_csv.py        # rules.csv generation with context awareness
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    ├── physiboss.py             # PhysiBoSS boolean networks
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    ├── initial_conditions.py    # Initial cell placement
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    ├── save_options.py          # Output and visualization
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    └── options.py               # Simulation parameters
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    ├── cell_rules.py            # Cell behavior rules and CSV generation with context awareness
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    ├── physiboss.py             # PhysiBoSS boolean networks
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    ├── initial_conditions.py    # Initial cell placement
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    ├── save_options.py          # Output and visualization
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    └── options.py               # Simulation parameters
 </code></pre></div>
 <h2 id="quick-start_1">🚀 Quick Start<a class="headerlink" href="#quick-start_1" title="Permanent link">&para;</a></h2>
 <h3 id="installation_1">Installation<a class="headerlink" href="#installation_1" title="Permanent link">&para;</a></h3>
@@ -1204,20 +1203,24 @@
 <a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="p">)</span>
 </code></pre></div>
 <h3 id="cell-rules-csv-generation">Cell Rules CSV Generation<a class="headerlink" href="#cell-rules-csv-generation" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1"># Create cell rules CSV with context awareness</span>
-<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="n">rules</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">cell_rules_csv</span>
-<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>
-<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="c1"># Explore available signals and behaviors</span>
-<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="n">rules</span><span class="o">.</span><span class="n">print_available_signals</span><span class="p">(</span><span class="n">filter_by_type</span><span class="o">=</span><span class="s2">&quot;contact&quot;</span><span class="p">)</span>
-<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="n">rules</span><span class="o">.</span><span class="n">print_available_behaviors</span><span class="p">(</span><span class="n">filter_by_type</span><span class="o">=</span><span class="s2">&quot;motility&quot;</span><span class="p">)</span>
-<a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="n">rules</span><span class="o">.</span><span class="n">print_context</span><span class="p">()</span>  <span class="c1"># Shows current cell types and substrates</span>
-<a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>
-<a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="c1"># Add rules following PhysiCell CSV format</span>
-<a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="n">rules</span><span class="o">.</span><span class="n">add_rule</span><span class="p">(</span><span class="s2">&quot;tumor&quot;</span><span class="p">,</span> <span class="s2">&quot;oxygen&quot;</span><span class="p">,</span> <span class="s2">&quot;decreases&quot;</span><span class="p">,</span> <span class="s2">&quot;necrosis&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">3.75</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-<a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a><span class="n">rules</span><span class="o">.</span><span class="n">add_rule</span><span class="p">(</span><span class="s2">&quot;tumor&quot;</span><span class="p">,</span> <span class="s2">&quot;contact with immune_cell&quot;</span><span class="p">,</span> <span class="s2">&quot;increases&quot;</span><span class="p">,</span> <span class="s2">&quot;apoptosis&quot;</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-<a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a>
-<a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a><span class="c1"># Generate PhysiCell-compatible CSV file</span>
-<a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a><span class="n">rules</span><span class="o">.</span><span class="n">generate_csv</span><span class="p">(</span><span class="s2">&quot;config/differentiation/rules.csv&quot;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1"># All cell rules functionality is in config.cell_rules</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="n">rules</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">cell_rules</span>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="n">rules</span><span class="o">.</span><span class="n">update_context_from_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>  <span class="c1"># sync cell types / substrates</span>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="c1"># Explore available signals and behaviors</span>
+<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="n">rules</span><span class="o">.</span><span class="n">print_available_signals</span><span class="p">(</span><span class="n">filter_by_type</span><span class="o">=</span><span class="s2">&quot;contact&quot;</span><span class="p">)</span>
+<a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="n">rules</span><span class="o">.</span><span class="n">print_available_behaviors</span><span class="p">(</span><span class="n">filter_by_type</span><span class="o">=</span><span class="s2">&quot;motility&quot;</span><span class="p">)</span>
+<a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="n">rules</span><span class="o">.</span><span class="n">print_context</span><span class="p">()</span>  <span class="c1"># Shows current cell types and substrates</span>
+<a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>
+<a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="c1"># Add rules following PhysiCell CSV format</span>
+<a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a><span class="n">rules</span><span class="o">.</span><span class="n">add_rule</span><span class="p">(</span><span class="s2">&quot;tumor&quot;</span><span class="p">,</span> <span class="s2">&quot;oxygen&quot;</span><span class="p">,</span> <span class="s2">&quot;decreases&quot;</span><span class="p">,</span> <span class="s2">&quot;necrosis&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">3.75</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a><span class="n">rules</span><span class="o">.</span><span class="n">add_rule</span><span class="p">(</span><span class="s2">&quot;tumor&quot;</span><span class="p">,</span> <span class="s2">&quot;contact with immune_cell&quot;</span><span class="p">,</span> <span class="s2">&quot;increases&quot;</span><span class="p">,</span> <span class="s2">&quot;apoptosis&quot;</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a>
+<a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a><span class="c1"># Validate all rules against the embedded registry</span>
+<a id="__codelineno-14-15" name="__codelineno-14-15" href="#__codelineno-14-15"></a><span class="n">warnings</span> <span class="o">=</span> <span class="n">rules</span><span class="o">.</span><span class="n">validate_rules</span><span class="p">()</span>
+<a id="__codelineno-14-16" name="__codelineno-14-16" href="#__codelineno-14-16"></a>
+<a id="__codelineno-14-17" name="__codelineno-14-17" href="#__codelineno-14-17"></a><span class="c1"># Generate PhysiCell-compatible CSV file</span>
+<a id="__codelineno-14-18" name="__codelineno-14-18" href="#__codelineno-14-18"></a><span class="n">rules</span><span class="o">.</span><span class="n">generate_csv</span><span class="p">(</span><span class="s2">&quot;config/differentiation/rules.csv&quot;</span><span class="p">)</span>
 </code></pre></div>
 <h3 id="physiboss-integration_1">PhysiBoSS Integration<a class="headerlink" href="#physiboss-integration_1" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="c1"># Add intracellular models to cell types</span>

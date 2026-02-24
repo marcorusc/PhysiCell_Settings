@@ -713,21 +713,25 @@ phenotype and intracellular models:</p>
 <ul>
 <li><code>add_ruleset(name, folder='./config', filename='rules.csv', enabled=True)</code> –
   register external rule files</li>
-<li><code>add_rule(...)</code> – create rules programmatically</li>
+<li><code>add_rule(cell_type, signal, direction, behavior, saturation_value, half_max, hill_power, apply_to_dead)</code> – create rules programmatically</li>
 <li><code>load_rules_from_csv(filename)</code> / <code>save_rules_to_csv(filename)</code> – interchange
   rules with CSV</li>
+<li><code>generate_csv(filename)</code> – produce a CSV ready for PhysiCell (alias for <code>save_rules_to_csv</code>)</li>
+<li><code>remove_rule(index)</code> – delete a rule by zero-based index</li>
+<li><code>validate_rules()</code> – check all rules against the embedded registry</li>
 <li><code>clear_rules()</code> / <code>clear_rulesets()</code> – reset configuration</li>
 </ul>
-<p><code>cell_rules_csv.py</code> wraps these rules in a CSV oriented helper that is aware of
-available signals and behaviors. Key calls include:</p>
+<p>The module also provides signals/behaviors registry and context awareness,
+formerly in the separate <code>cell_rules_csv.py</code> helper:</p>
 <ul>
+<li><code>update_context_from_config(config)</code> – sync cell types and substrates from a config instance</li>
 <li><code>get_available_signals(filter_by_type=None)</code></li>
 <li><code>get_available_behaviors(filter_by_type=None)</code></li>
 <li><code>get_context()</code> – inspect current cell types, substrates and custom variables</li>
-<li><code>add_rule(cell_type, signal, direction, behavior, saturation_value, half_max, hill_power, apply_to_dead)</code></li>
-<li><code>generate_csv(filename)</code> – produce a CSV ready for PhysiCell</li>
+<li><code>get_signal_by_name(name)</code> / <code>get_behavior_by_name(name)</code> – look up by name</li>
+<li><code>print_available_signals()</code> / <code>print_available_behaviors()</code> / <code>print_context()</code> / <code>print_rules()</code></li>
 </ul>
-<p>The context awareness ensures that generated rules only reference entities
+<p>Context awareness ensures that generated rules only reference entities
 present in the configuration.</p>
 <h2 id="physiboss-integration">PhysiBoSS Integration<a class="headerlink" href="#physiboss-integration" title="Permanent link">&para;</a></h2>
 <p><code>physicell_config/modules/physiboss.py</code></p>
