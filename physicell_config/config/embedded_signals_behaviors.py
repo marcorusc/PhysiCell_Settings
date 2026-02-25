@@ -475,7 +475,7 @@ SIGNALS_BEHAVIORS: Dict[str, Any] = {
             "description": "Fuse with a specific cell type"
         },
         "29": {
-            "name": "transition to cell type",
+            "name": "transform to cell type",
             "type": "transformation",
             "requires": ["cell_type"],
             "description": "Transform to a specific cell type"
