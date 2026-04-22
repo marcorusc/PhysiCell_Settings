@@ -1284,6 +1284,14 @@ class CellTypeModule(BaseModule):
             custom_data_elem = cell_def.find('custom_data')
             if custom_data_elem is not None:
                 self._parse_custom_data(name, custom_data_elem)
+
+            # Parse initial parameter distributions (sibling of phenotype)
+            distributions_elem = cell_def.find('initial_parameter_distributions')
+            if distributions_elem is not None:
+                self._parse_initial_parameter_distributions(
+                    self.cell_types[name]['initial_parameter_distributions'],
+                    distributions_elem,
+                )
     
     def _create_cell_type_structure(self, name: str, parent_type: Optional[str]) -> None:
         """Create the basic cell type data structure."""
@@ -1325,6 +1333,21 @@ class CellTypeModule(BaseModule):
         if secretion_elem is not None:
             self._parse_secretion(phenotype['secretion'], secretion_elem)
         
+        # Parse cell-cell interactions (phagocytosis, attack, fusion rates)
+        interactions_elem = phenotype_elem.find('cell_interactions')
+        if interactions_elem is not None:
+            self._parse_cell_interactions(phenotype['cell_interactions'], interactions_elem)
+
+        # Parse cell transformations (state-transition rates)
+        transformations_elem = phenotype_elem.find('cell_transformations')
+        if transformations_elem is not None:
+            self._parse_cell_transformations(phenotype['cell_transformations'], transformations_elem)
+
+        # Parse cell integrity (damage / repair rates)
+        integrity_elem = phenotype_elem.find('cell_integrity')
+        if integrity_elem is not None:
+            self._parse_cell_integrity(phenotype['cell_integrity'], integrity_elem)
+
         # Parse intracellular (PhysiBOSS)
         intracellular_elem = phenotype_elem.find('intracellular')
         if intracellular_elem is not None:
@@ -1477,7 +1500,131 @@ class CellTypeModule(BaseModule):
                 
                 if substrate_data:  # Only add if we have valid data
                     secretion_data[substrate_name] = substrate_data
-    
+
+    def _parse_cell_interactions(self, interactions_data: Dict[str, Any], interactions_elem: ET.Element) -> None:
+        """Parse cell-cell interaction parameters (phagocytosis, attack, fusion).
+
+        Reverses ``_add_cell_interactions_xml``. Fields not present in the XML
+        retain their template defaults in ``interactions_data``.
+        """
+        # Scalar phagocytosis / attack rates
+        scalar_fields = (
+            'apoptotic_phagocytosis_rate',
+            'necrotic_phagocytosis_rate',
+            'other_dead_phagocytosis_rate',
+            'attack_damage_rate',
+            'attack_duration',
+        )
+        for field in scalar_fields:
+            elem = interactions_elem.find(field)
+            if elem is not None and elem.text and elem.text.strip():
+                try:
+                    interactions_data[field] = float(elem.text.strip())
+                except ValueError:
+                    # Skip malformed values
+                    pass
+
+        # Dict-valued per-target rates
+        dict_fields = (
+            ('live_phagocytosis_rates', 'phagocytosis_rate'),
+            ('attack_rates', 'attack_rate'),
+            ('fusion_rates', 'fusion_rate'),
+        )
+        for container_tag, child_tag in dict_fields:
+            container = interactions_elem.find(container_tag)
+            if container is None:
+                continue
+            if container_tag not in interactions_data or not isinstance(
+                interactions_data[container_tag], dict
+            ):
+                interactions_data[container_tag] = {}
+            for rate_elem in container.findall(child_tag):
+                target_name = rate_elem.get('name')
+                if target_name and rate_elem.text and rate_elem.text.strip():
+                    try:
+                        interactions_data[container_tag][target_name] = float(
+                            rate_elem.text.strip()
+                        )
+                    except ValueError:
+                        pass
+
+    def _parse_cell_transformations(self, transformations_data: Dict[str, Any], transformations_elem: ET.Element) -> None:
+        """Parse cell transformation rates.
+
+        Reverses ``_add_cell_transformations_xml``.
+        """
+        rates_elem = transformations_elem.find('transformation_rates')
+        if rates_elem is None:
+            return
+        if 'transformation_rates' not in transformations_data or not isinstance(
+            transformations_data['transformation_rates'], dict
+        ):
+            transformations_data['transformation_rates'] = {}
+        for rate_elem in rates_elem.findall('transformation_rate'):
+            target_name = rate_elem.get('name')
+            if target_name and rate_elem.text and rate_elem.text.strip():
+                try:
+                    transformations_data['transformation_rates'][target_name] = float(
+                        rate_elem.text.strip()
+                    )
+                except ValueError:
+                    pass
+
+    def _parse_cell_integrity(self, integrity_data: Dict[str, Any], integrity_elem: ET.Element) -> None:
+        """Parse cell integrity (damage / repair) rates.
+
+        Reverses ``_add_cell_integrity_xml``.
+        """
+        for field in ('damage_rate', 'damage_repair_rate'):
+            elem = integrity_elem.find(field)
+            if elem is not None and elem.text and elem.text.strip():
+                try:
+                    integrity_data[field] = float(elem.text.strip())
+                except ValueError:
+                    pass
+
+    def _parse_initial_parameter_distributions(self, distributions_data: Dict[str, Any], distributions_elem: ET.Element) -> None:
+        """Parse initial parameter distributions.
+
+        Reverses ``_add_initial_parameter_distributions_xml``. Both Log10Normal
+        and LogUniform distribution types are recognised.
+        """
+        enabled_attr = distributions_elem.get('enabled')
+        if enabled_attr is not None:
+            distributions_data['enabled'] = enabled_attr.strip().lower() == 'true'
+
+        parsed = []
+        for dist_elem in distributions_elem.findall('distribution'):
+            dist: Dict[str, Any] = {
+                'enabled': (dist_elem.get('enabled') or 'false').strip().lower() == 'true',
+                'type': dist_elem.get('type', 'Log10Normal'),
+                'check_base': (dist_elem.get('check_base') or 'true').strip().lower() == 'true',
+            }
+
+            behavior_elem = dist_elem.find('behavior')
+            if behavior_elem is not None and behavior_elem.text and behavior_elem.text.strip():
+                dist['behavior'] = behavior_elem.text.strip()
+
+            if dist['type'] == 'Log10Normal':
+                numeric_keys = ('mu', 'sigma', 'upper_bound')
+            elif dist['type'] == 'LogUniform':
+                numeric_keys = ('min', 'max')
+            else:
+                numeric_keys = ()
+
+            for key in numeric_keys:
+                elem = dist_elem.find(key)
+                if elem is not None and elem.text and elem.text.strip():
+                    try:
+                        dist[key] = float(elem.text.strip())
+                    except ValueError:
+                        pass
+
+            parsed.append(dist)
+
+        if parsed:
+            distributions_data['distributions'] = parsed
+
     def _parse_custom_data(self, cell_name: str, custom_data_elem: ET.Element) -> None:
         """Parse custom data variables."""
         custom_data = self.cell_types[cell_name]['custom_data']
