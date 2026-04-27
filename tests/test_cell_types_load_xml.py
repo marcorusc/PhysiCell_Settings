@@ -31,6 +31,10 @@ def _diff(before, after, path=""):
                 issues.append(f"{path}.{k} missing after reload")
             else:
                 issues.extend(_diff(v, after[k], f"{path}.{k}"))
+        if isinstance(after, dict):
+            for k in after:
+                if k not in before:
+                    issues.append(f"{path}.{k} unexpected extra key after reload")
     elif isinstance(before, list):
         if not isinstance(after, list) or len(after) != len(before):
             issues.append(

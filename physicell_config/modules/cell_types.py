@@ -1534,10 +1534,8 @@ class CellTypeModule(BaseModule):
             container = interactions_elem.find(container_tag)
             if container is None:
                 continue
-            if container_tag not in interactions_data or not isinstance(
-                interactions_data[container_tag], dict
-            ):
-                interactions_data[container_tag] = {}
+            # Reset to empty so template-default entries (e.g. 'default') don't linger
+            interactions_data[container_tag] = {}
             for rate_elem in container.findall(child_tag):
                 target_name = rate_elem.get('name')
                 if target_name and rate_elem.text and rate_elem.text.strip():
@@ -1556,10 +1554,8 @@ class CellTypeModule(BaseModule):
         rates_elem = transformations_elem.find('transformation_rates')
         if rates_elem is None:
             return
-        if 'transformation_rates' not in transformations_data or not isinstance(
-            transformations_data['transformation_rates'], dict
-        ):
-            transformations_data['transformation_rates'] = {}
+        # Reset to empty so template-default entries (e.g. 'default') don't linger
+        transformations_data['transformation_rates'] = {}
         for rate_elem in rates_elem.findall('transformation_rate'):
             target_name = rate_elem.get('name')
             if target_name and rate_elem.text and rate_elem.text.strip():
@@ -1622,8 +1618,8 @@ class CellTypeModule(BaseModule):
 
             parsed.append(dist)
 
-        if parsed:
-            distributions_data['distributions'] = parsed
+        # Always replace (even when empty) so template-default entries don't linger
+        distributions_data['distributions'] = parsed
 
     def _parse_custom_data(self, cell_name: str, custom_data_elem: ET.Element) -> None:
         """Parse custom data variables."""
