@@ -144,12 +144,19 @@ class CellTypeModule(BaseModule):
         cycle_data.update(model_config)
         cycle_data['model'] = model
     
-    def set_cycle_transition_rate(self, cell_type: str, from_phase: int, to_phase: int, rate: float) -> None:
-        """Set a specific transition rate between cycle phases."""
+    def set_cycle_transition_rate(self, cell_type: str, from_phase: int, to_phase: int, rate: float,
+                                  fixed_duration: Optional[bool] = None) -> None:
+        """Set a cycle rate, optionally overriding its fixed-duration flag.
+
+        Omit ``fixed_duration`` to retain an existing override or the model default.
+        Explicit ``False`` overrides a model's fixed-duration default.
+        """
         if cell_type not in self.cell_types:
             raise ValueError(f"Cell type '{cell_type}' not found")
         
         self._validate_non_negative_number(rate, "transition rate")
+        if fixed_duration is not None and not isinstance(fixed_duration, bool):
+            raise ValueError("fixed_duration must be a bool or None")
         
         # Initialize transition_rates if not present
         if 'transition_rates' not in self.cell_types[cell_type]['phenotype']['cycle']:
@@ -162,6 +169,8 @@ class CellTypeModule(BaseModule):
         for transition in transition_rates:
             if transition['from'] == from_phase and transition['to'] == to_phase:
                 transition['rate'] = rate
+                if fixed_duration is not None:
+                    transition['fixed_duration'] = fixed_duration
                 return
         
         # Add new transition
@@ -170,6 +179,8 @@ class CellTypeModule(BaseModule):
             'to': to_phase, 
             'rate': rate
         })
+        if fixed_duration is not None:
+            transition_rates[-1]['fixed_duration'] = fixed_duration
     
     def set_cycle_phase_durations(self, cell_type: str, durations: list) -> None:
         """Set cycle phase durations for a cell type.
@@ -849,7 +860,7 @@ class CellTypeModule(BaseModule):
                         fixed_duration = link.get('fixed_duration', False)
                         break
                 
-                rate_elem.set("fixed_duration", str(fixed_duration).lower())
+                rate_elem.set("fixed_duration", str(transition.get("fixed_duration", fixed_duration)).lower())
         
         # Phase durations format (alternative to transition rates, both supported by PhysiCell)
         elif 'phase_durations' in cycle and cycle['phase_durations']:
@@ -1355,32 +1366,61 @@ class CellTypeModule(BaseModule):
     
     def _parse_cycle(self, cycle_data: Dict[str, Any], cycle_elem: ET.Element) -> None:
         """Parse cycle model and parameters."""
-        # Parse model name
-        model_elem = cycle_elem.find('model')
-        if model_elem is not None and model_elem.text and model_elem.text.strip():
-            cycle_data['model'] = model_elem.text.strip()
-            
-        # Parse phase transition rates
+        # XML stores model identity as attributes; older files may use <model>.
+        model_name = cycle_elem.findtext('model')
+        code = cycle_elem.get('code')
+        name = cycle_elem.get('name')
+        models = config_loader.config['cell_cycle_models']
+        if not model_name:
+            model_name = next((key for key, model in models.items()
+                               if (code is not None and model['code'] == code)
+                               or (code is None and model['name'] == name)), None)
+        if model_name:
+            model_name = model_name.strip()
+            if model_name in models:
+                cycle_data.clear()
+                cycle_data.update(config_loader.get_cycle_model(model_name))
+            cycle_data['model'] = model_name
+        elif code is not None or name is not None:
+            # Preserve custom model metadata instead of selecting a template.
+            cycle_data.clear()
+            cycle_data['model'] = name or code
+        if code is not None:
+            cycle_data['code'] = code
+        if name is not None:
+            cycle_data['name'] = name
+
         rates_elem = cycle_elem.find('phase_transition_rates')
         if rates_elem is not None:
-            rates = rates_elem.findall('rate')
-            cycle_data['phase_transition_rates'] = []
-            for rate in rates:
+            cycle_data.pop('phase_durations', None)
+            cycle_data.pop('phase_transition_rates', None)
+            cycle_data['transition_rates'] = []
+            for rate in rates_elem.findall('rate'):
                 try:
-                    start_index = int(rate.get('start_index', 0))
-                    end_index = int(rate.get('end_index', 0))
-                    rate_value = float(rate.text.strip()) if rate.text and rate.text.strip() else 0.0
-                    fixed_duration = rate.get('fixed_duration', 'false').lower() == 'true'
-                    
-                    cycle_data['phase_transition_rates'].append({
-                        'start_index': start_index,
-                        'end_index': end_index,
-                        'rate': rate_value,
-                        'fixed_duration': fixed_duration
+                    cycle_data['transition_rates'].append({
+                        'from': int(rate.get('start_index', 0)),
+                        'to': int(rate.get('end_index', 0)),
+                        'rate': float(rate.text.strip()) if rate.text and rate.text.strip() else 0.0,
+                        'fixed_duration': rate.get('fixed_duration', 'false').lower() == 'true'
                     })
                 except (ValueError, AttributeError):
-                    # Skip invalid rate entries
+                    # Retain the loader's tolerance for malformed legacy rates.
                     pass
+        else:
+            durations_elem = cycle_elem.find('phase_durations')
+            if durations_elem is not None:
+                cycle_data['transition_rates'] = []
+                cycle_data.pop('phase_transition_rates', None)
+                cycle_data['phase_durations'] = []
+                for duration in durations_elem.findall('duration'):
+                    try:
+                        cycle_data['phase_durations'].append({
+                            'index': int(duration.get('index', 0)),
+                            'duration': float(duration.text),
+                            'fixed_duration': duration.get('fixed_duration', 'false').lower() == 'true'
+                        })
+                    except (ValueError, TypeError):
+                        pass
     
     def _parse_death(self, death_data: Dict[str, Any], death_elem: ET.Element) -> None:
         """Parse death model parameters."""
