@@ -1389,7 +1389,9 @@ class CellTypeModule(BaseModule):
             model_name = model_elem.get('name')
             if model_name and model_name in death_data:
                 # Parse rate
-                rate_elem = model_elem.find('death_rate') or model_elem.find('rate')
+                rate_elem = model_elem.find('death_rate')
+                if rate_elem is None:
+                    rate_elem = model_elem.find('rate')
                 if rate_elem is not None and rate_elem.text and rate_elem.text.strip():
                     try:
                         rate_value = float(rate_elem.text.strip())
