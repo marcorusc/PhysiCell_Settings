@@ -93,6 +93,27 @@ class SettingsRoundtripTests(unittest.TestCase):
         rate = ET.fromstring(cfg.generate_xml()).find('.//cycle/phase_transition_rates/rate[@start_index="1"]')
         self.assertEqual(rate.get('fixed_duration'), 'true')
 
+    def test_physiboss_roundtrip(self):
+        for stochasticity in (0, 0.125, 2):
+            for steepness in (None, 0, 2.5, 10):
+                with self.subTest(stochasticity=stochasticity, steepness=steepness):
+                    cfg = self.config()
+                    cfg.physiboss.add_intracellular_model('test')
+                    cfg.physiboss.set_intracellular_settings('test', time_stochasticity=stochasticity, inheritance_global=False)
+                    kwargs = {} if steepness is None else {'steepness': steepness}
+                    cfg.physiboss.add_intracellular_output('test', 'migration speed', 'Move', 'activation', 0, 0, 0, **kwargs)
+                    for _ in range(2):
+                        cfg = self.roundtrip(cfg)
+                        intra = self.phenotype(cfg)['intracellular']
+                        self.assertEqual(intra['settings']['time_stochasticity'], stochasticity)
+                        self.assertIs(intra['settings']['inheritance']['global'], False)
+                        output = intra['mapping']['outputs'][0]['settings']
+                        for key in ('value', 'base_value', 'smoothing'):
+                            self.assertEqual(output[key], 0)
+                        self.assertEqual(output.get('steepness', 10), 10 if steepness is None else steepness)
+                        if steepness is None:
+                            self.assertNotIn('steepness', output)
+
     def test_all_cycle_models_retain_defaults(self):
         for model in ('Ki67_basic', 'Ki67_advanced', 'live', 'cycling_quiescent',
                       'flow_cytometry', 'flow_cytometry_separated'):
@@ -104,6 +125,53 @@ class SettingsRoundtripTests(unittest.TestCase):
                 self.assertEqual(before.attrib, after.attrib)
                 self.assertEqual([(r.attrib, float(r.text)) for r in before.findall('.//rate')],
                                  [(r.attrib, float(r.text)) for r in after.findall('.//rate')])
+
+    def test_old_config_omissions_and_copy(self):
+        cfg = self.config()
+        default_death = copy.deepcopy(self.phenotype(cfg)['death'])
+        cfg.physiboss.add_intracellular_model('test')
+        cfg.physiboss.add_intracellular_output('test', 'migration speed', 'Move')
+        cfg = cfg.copy()
+        self.assertEqual(self.phenotype(cfg)['death'], default_death)
+        intra = self.phenotype(cfg)['intracellular']
+        self.assertNotIn('time_stochasticity', intra['settings'])
+        self.assertNotIn('steepness', intra['mapping']['outputs'][0]['settings'])
+        root = ET.fromstring(cfg.generate_xml())
+        self.assertIsNone(root.find('.//time_stochasticity'))
+        self.assertIsNone(root.find('.//steepness'))
+
+    def test_xml_imported_steepness_and_fraction(self):
+        cfg = self.config()
+        cfg.physiboss.add_intracellular_model('test')
+        cfg.physiboss.add_intracellular_output('test', 'migration speed', 'Move')
+        root = ET.fromstring(cfg.generate_xml())
+        ET.SubElement(root.find('.//intracellular/settings'), 'time_stochasticity').text = '0.375'
+        ET.SubElement(root.find('.//output/settings'), 'steepness').text = '0'
+        cfg.load_xml_string(ET.tostring(root, encoding='unicode'))
+        result = ET.fromstring(cfg.copy().generate_xml())
+        self.assertEqual(float(result.findtext('.//time_stochasticity')), 0.375)
+        self.assertEqual(float(result.findtext('.//steepness')), 0)
+
+    def test_invalid_physiboss_xml_and_direct_export(self):
+        for field in ('steepness', 'time_stochasticity'):
+            for bad in ('-0.5', 'nan', 'inf', 'invalid', ''):
+                with self.subTest(field=field, bad=bad):
+                    cfg = self.config()
+                    cfg.physiboss.add_intracellular_model('test')
+                    cfg.physiboss.add_intracellular_output('test', 'migration speed', 'Move')
+                    root = ET.fromstring(cfg.generate_xml())
+                    path = './/output/settings' if field == 'steepness' else './/intracellular/settings'
+                    ET.SubElement(root.find(path), field).text = bad
+                    with self.assertRaisesRegex(XMLLoadingError, field):
+                        PhysiCellConfig.from_xml_string(ET.tostring(root, encoding='unicode'))
+                    intra = self.phenotype(cfg)['intracellular']
+                    settings = intra['mapping']['outputs'][0]['settings'] if field == 'steepness' else intra['settings']
+                    settings[field] = bad
+                    with self.assertRaisesRegex(ValueError, field):
+                        cfg.generate_xml()
+                    with tempfile.TemporaryDirectory() as directory:
+                        with self.assertRaisesRegex(ValueError, field):
+                            cfg.save_xml(str(Path(directory) / 'invalid.xml'))
 
     def test_cycle_phase_durations_and_new_transition(self):
         cfg = self.config()
@@ -120,6 +188,26 @@ class SettingsRoundtripTests(unittest.TestCase):
         self.assertEqual(float(rate.text), 0)
         self.assertEqual(rate.get('fixed_duration'), 'true')
 
+    def test_invalid_setters_do_not_mutate(self):
+        cfg = self.config()
+        cfg.physiboss.add_intracellular_model('test')
+        for bad in (-1, float('nan'), float('inf'), 'invalid', [], True):
+            for setter in (
+                lambda: cfg.physiboss.set_intracellular_settings('test', intracellular_dt=5, time_stochasticity=bad),
+                lambda: cfg.physiboss.add_intracellular_output('test', 'speed', 'Move', steepness=bad),
+            ):
+                before = copy.deepcopy(self.phenotype(cfg))
+                with self.assertRaises(ValueError):
+                    setter()
+                self.assertEqual(self.phenotype(cfg), before)
+        for bad in ('false', 0, 1, [], 'true'):
+            with self.assertRaises(ValueError):
+                cfg.cell_types.set_cycle_transition_rate('test', 0, 0, 0, fixed_duration=bad)
+        for setter in (lambda: cfg.cell_types.set_death_rate('test', 'apoptosis', -1),
+                       lambda: cfg.cell_types.set_cycle_transition_rate('test', 0, 0, -1)):
+            with self.assertRaises(ValueError):
+                setter()
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     unittest.main()

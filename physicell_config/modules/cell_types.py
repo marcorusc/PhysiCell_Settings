@@ -1421,7 +1421,7 @@ class CellTypeModule(BaseModule):
                         })
                     except (ValueError, TypeError):
                         pass
-    
+
     def _parse_death(self, death_data: Dict[str, Any], death_elem: ET.Element) -> None:
         """Parse death model parameters."""
         # Parse death models
@@ -1754,7 +1754,10 @@ class CellTypeModule(BaseModule):
         """Parse intracellular settings section."""
         # Parse simple numeric/string settings
         for child in settings_elem:
-            if child.tag in ['intracellular_dt', 'time_stochasticity', 'scaling', 'start_time']:
+            if child.tag == 'time_stochasticity':
+                self._config.physiboss._validate_nonnegative_setting(child.text, child.tag)
+                settings_data[child.tag] = float(child.text)
+            elif child.tag in ['intracellular_dt', 'scaling', 'start_time']:
                 if child.text and child.text.strip():
                     try:
                         settings_data[child.tag] = float(child.text.strip())
@@ -1844,6 +1847,8 @@ class CellTypeModule(BaseModule):
                 settings_elem = output_elem.find('settings')
                 if settings_elem is not None:
                     for setting in settings_elem:
+                        if setting.tag == 'steepness':
+                            self._config.physiboss._validate_nonnegative_setting(setting.text, 'steepness')
                         if setting.text and setting.text.strip():
                             try:
                                 value = float(setting.text.strip())
