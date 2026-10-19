@@ -830,8 +830,9 @@ class CellTypeModule(BaseModule):
         
         try:
             model_config = config_loader.get_cycle_model(model_name)
-            cycle_elem.set("code", model_config.get('code', '5'))
-            cycle_elem.set("name", model_config.get('name', model_name))
+            # Explicit imported identity takes precedence over template metadata.
+            cycle_elem.set("code", cycle.get('code', model_config.get('code', '5')))
+            cycle_elem.set("name", cycle.get('name', model_config.get('name', model_name)))
         except ValueError:
             # Fallback for unknown models
             cycle_elem.set("code", cycle.get('code', '5'))

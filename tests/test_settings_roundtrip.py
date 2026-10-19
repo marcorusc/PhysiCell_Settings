@@ -86,6 +86,28 @@ class SettingsRoundtripTests(unittest.TestCase):
         self.assertEqual(result.find('.//rate').get('fixed_duration'), 'false')
         self.assertEqual(float(result.findtext('.//rate')), 0)
 
+    def test_imported_cycle_metadata_survives_roundtrips(self):
+        for code, name in (('1', 'Imported Ki67 label'),
+                           ('99', 'live'),
+                           ('99', 'Custom cycle')):
+            with self.subTest(code=code, name=name):
+                cfg = self.config()
+                root = ET.fromstring(cfg.generate_xml())
+                cycle = root.find('.//cycle')
+                cycle.set('code', code)
+                cycle.set('name', name)
+                cfg.load_xml_string(ET.tostring(root, encoding='unicode'))
+                for _ in range(2):
+                    result = ET.fromstring(cfg.generate_xml()).find('.//cycle')
+                    self.assertEqual(result.get('code'), code)
+                    self.assertEqual(result.get('name'), name)
+                    copied = ET.fromstring(cfg.copy().generate_xml()).find('.//cycle')
+                    self.assertEqual(copied.attrib, result.attrib)
+                    cfg = self.roundtrip(cfg)
+                result = ET.fromstring(cfg.generate_xml()).find('.//cycle')
+                self.assertEqual(result.get('code'), code)
+                self.assertEqual(result.get('name'), name)
+
     def test_legacy_cycle_defaults(self):
         cfg = self.config()
         cfg.cell_types.set_cycle_model('test', 'Ki67_basic')
