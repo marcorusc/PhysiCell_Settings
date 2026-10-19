@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -935,14 +935,17 @@ Each module exposes a small API focused on a single aspect of the configuration.
 <li><code>get_save_options()</code> – return internal save options.</li>
 </ul>
 <h3 id="physibossmodule">PhysiBoSSModule<a class="headerlink" href="#physibossmodule" title="Permanent link">&para;</a></h3>
+<p>Access these methods through <code>config.physiboss</code>:</p>
 <ul>
-<li><code>enable_physiboss(model_file='boolean_model.bnd', initial_values=None, mutations=None, parameters=None)</code> – activate PhysiBoSS integration with initial settings.</li>
-<li><code>set_time_step(value)</code> and <code>set_scaling(value)</code> – adjust simulation step and scaling.</li>
-<li><code>add_initial_value(node, value)</code> / <code>add_mutation(cell_line, node, value)</code> / <code>add_parameter(name, value)</code> – modify network settings.</li>
-<li><code>add_to_xml(parent)</code> – serialize PhysiBoSS configuration when enabled.</li>
-<li><code>is_enabled()</code> – check status.</li>
-<li><code>get_settings()</code> – retrieve current options.</li>
+<li><code>add_intracellular_model(cell_type_name, model_type='maboss', bnd_filename='', cfg_filename='')</code> – attach a model.</li>
+<li><code>set_intracellular_settings(cell_type_name, intracellular_dt=None, time_stochasticity=None, scaling=None, start_time=None, inheritance_global=None)</code> – set per-cell options; stochasticity accepts finite nonnegative fractions and zero.</li>
+<li><code>add_intracellular_output(cell_type_name, physicell_name, intracellular_name, action='activation', value=1000000, base_value=0, smoothing=0, steepness=None)</code> – add an output mapping. Omitted steepness preserves the legacy simulator default of 10; explicit nonnegative finite values, including zero, survive XML roundtrips.</li>
+<li><code>add_intracellular_initial_value(cell_type_name, intracellular_name, value)</code> – set a node's initial value.</li>
+<li><code>add_intracellular_mutation(cell_type_name, intracellular_name, value)</code> – add a mutation.</li>
+<li><code>is_enabled()</code> – check whether intracellular models are configured.</li>
 </ul>
+<p><code>config.save_xml()</code> exports the per-cell settings. Invalid stochasticity or
+steepness raises <code>ValueError</code>; invalid XML values raise <code>XMLLoadingError</code>.</p>
 <h3 id="configloader">ConfigLoader<a class="headerlink" href="#configloader" title="Permanent link">&para;</a></h3>
 <p>Utility singleton in <code>physicell_config/modules/config_loader.py</code> used by all
 modules to pull default parameters from JSON files.</p>
@@ -979,7 +982,7 @@ modules to pull default parameters from JSON files.</p>
 <ul>
 <li><code>add_cell_type(name, parent_type='default', template='default')</code> – create a new cell type from a template.</li>
 <li><code>set_cycle_model(cell_type, model)</code> – assign a cycle model (<code>Ki67_basic</code>, <code>Ki67_advanced</code>, <code>live</code>, <code>cycling_quiescent</code>, <code>flow_cytometry</code>, <code>flow_cytometry_separated</code>).</li>
-<li><code>set_cycle_transition_rate(cell_type, from_phase, to_phase, rate)</code> – override a specific phase transition rate.</li>
+<li><code>set_cycle_transition_rate(cell_type, from_phase, to_phase, rate, fixed_duration=None)</code> – override a specific phase transition rate. An explicit boolean overrides the fixed-duration flag; omission retains the existing flag or model default.</li>
 <li><code>set_cycle_phase_durations(cell_type, durations)</code> – set cycle phase durations as a list of <code>{index, duration, fixed_duration}</code> dicts; clears any transition rates so <code>&lt;phase_durations&gt;</code> is used in the XML output. Both formats are valid in PhysiCell.</li>
 <li><code>set_death_rate(cell_type, death_type, rate)</code> – set the base death rate for <code>'apoptosis'</code> or <code>'necrosis'</code>.</li>
 <li><code>set_death_parameters(cell_type, death_type, **params)</code> – set death model sub-parameters: <code>unlysed_fluid_change_rate</code>, <code>lysed_fluid_change_rate</code>, <code>cytoplasmic_biomass_change_rate</code>, <code>nuclear_biomass_change_rate</code>, <code>calcification_rate</code>, <code>relative_rupture_volume</code>.</li>
@@ -1001,12 +1004,18 @@ modules to pull default parameters from JSON files.</p>
 <li><code>set_custom_data(cell_type, key, value, units='dimensionless', description='', conserved=False)</code> – add or update a custom data entry.</li>
 <li><code>clear_custom_data(cell_type)</code> – remove all custom data entries for a cell type.</li>
 <li><code>update_all_cell_types_for_interactions()</code> – populate live phagocytosis, attack, fusion, and transformation rate dicts for all defined cell types with zero defaults.</li>
+</ul>
+<p>The following intracellular methods belong to <code>config.physiboss</code>:</p>
+<ul>
 <li><code>add_intracellular_model(cell_type, model_type='maboss', bnd_filename='', cfg_filename='')</code> – attach an intracellular model.</li>
-<li><code>set_intracellular_settings(cell_type, intracellular_dt=None, time_stochasticity=None, scaling=None, start_time=None, inheritance_global=None)</code> – tweak intracellular options.</li>
+<li><code>set_intracellular_settings(cell_type, intracellular_dt=None, time_stochasticity=None, scaling=None, start_time=None, inheritance_global=None)</code> – tweak intracellular options. <code>time_stochasticity</code> accepts finite nonnegative fractional values, including zero.</li>
 <li><code>add_intracellular_mutation(cell_type, intracellular_name, value)</code> – force a node value.</li>
 <li><code>add_intracellular_initial_value(cell_type, intracellular_name, value)</code> – set initial node value.</li>
 <li><code>add_intracellular_input(cell_type, physicell_name, intracellular_name, action='activation', threshold=1, smoothing=0)</code> – map a substrate or variable to a network node.</li>
-<li><code>add_intracellular_output(cell_type, physicell_name, intracellular_name, action='activation', value=1000000, base_value=0, smoothing=0)</code> – map a network node to a behavior.</li>
+<li><code>add_intracellular_output(cell_type, physicell_name, intracellular_name, action='activation', value=1000000, base_value=0, smoothing=0, steepness=None)</code> – map a network node to a behavior. Optional finite nonnegative steepness is exported, including zero; omission keeps the legacy simulator default of 10.</li>
+</ul>
+<p>The remaining methods belong to <code>config.cell_types</code>:</p>
+<ul>
 <li><code>add_to_xml(parent)</code> – serialize cell definitions to XML.</li>
 <li><code>get_cell_types()</code> – return all stored cell type data.</li>
 </ul>
@@ -1069,17 +1078,17 @@ modules to pull default parameters from JSON files.</p>
 <li><code>get_save_options()</code> – return save options.</li>
 </ul>
 <h3 id="physibossmodule_1">PhysiBoSSModule<a class="headerlink" href="#physibossmodule_1" title="Permanent link">&para;</a></h3>
+<p>Access these methods through <code>config.physiboss</code>:</p>
 <ul>
-<li><code>enable_physiboss(model_file='boolean_model.bnd', initial_values=None, mutations=None, parameters=None)</code> – activate the Boolean network.</li>
-<li><code>set_time_step(value)</code> – network step size in minutes.</li>
-<li><code>set_scaling(value)</code> – scale network speed.</li>
-<li><code>add_initial_value(node, value)</code> – set a node's initial state.</li>
-<li><code>add_mutation(cell_line, node, value)</code> – force a mutation for a cell line.</li>
-<li><code>add_parameter(name, value)</code> – additional simulator parameter.</li>
-<li><code>add_to_xml(parent)</code> – export settings if enabled.</li>
-<li><code>is_enabled()</code> – check whether PhysiBoSS is active.</li>
-<li><code>get_settings()</code> – retrieve current PhysiBoSS options.</li>
+<li><code>add_intracellular_model(cell_type_name, model_type='maboss', bnd_filename='', cfg_filename='')</code> – attach a model.</li>
+<li><code>set_intracellular_settings(cell_type_name, intracellular_dt=None, time_stochasticity=None, scaling=None, start_time=None, inheritance_global=None)</code> – set per-cell options; stochasticity accepts finite nonnegative fractions and zero.</li>
+<li><code>add_intracellular_output(cell_type_name, physicell_name, intracellular_name, action='activation', value=1000000, base_value=0, smoothing=0, steepness=None)</code> – add an output mapping. Omitted steepness preserves the legacy simulator default of 10; explicit nonnegative finite values, including zero, survive XML roundtrips.</li>
+<li><code>add_intracellular_initial_value(cell_type_name, intracellular_name, value)</code> – set a node's initial value.</li>
+<li><code>add_intracellular_mutation(cell_type_name, intracellular_name, value)</code> – add a mutation.</li>
+<li><code>is_enabled()</code> – check whether intracellular models are configured.</li>
 </ul>
+<p><code>config.save_xml()</code> exports the per-cell settings. Invalid stochasticity or
+steepness raises <code>ValueError</code>; invalid XML values raise <code>XMLLoadingError</code>.</p>
 <h3 id="configloader_1">ConfigLoader<a class="headerlink" href="#configloader_1" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>get_cycle_model(name)</code></li>
@@ -1172,7 +1181,7 @@ modules to pull default parameters from JSON files.</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "toc.integrate", "search.suggest", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>
