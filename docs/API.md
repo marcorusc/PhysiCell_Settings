@@ -93,12 +93,17 @@ Handles phenotype and behavioral properties for all cell types.
 - `get_save_options()` – return internal save options.
 
 ### PhysiBoSSModule
-- `enable_physiboss(model_file='boolean_model.bnd', initial_values=None, mutations=None, parameters=None)` – activate PhysiBoSS integration with initial settings.
-- `set_time_step(value)` and `set_scaling(value)` – adjust simulation step and scaling.
-- `add_initial_value(node, value)` / `add_mutation(cell_line, node, value)` / `add_parameter(name, value)` – modify network settings.
-- `add_to_xml(parent)` – serialize PhysiBoSS configuration when enabled.
-- `is_enabled()` – check status.
-- `get_settings()` – retrieve current options.
+Access these methods through `config.physiboss`:
+
+- `add_intracellular_model(cell_type_name, model_type='maboss', bnd_filename='', cfg_filename='')` – attach a model.
+- `set_intracellular_settings(cell_type_name, intracellular_dt=None, time_stochasticity=None, scaling=None, start_time=None, inheritance_global=None)` – set per-cell options; stochasticity accepts finite nonnegative fractions and zero.
+- `add_intracellular_output(cell_type_name, physicell_name, intracellular_name, action='activation', value=1000000, base_value=0, smoothing=0, steepness=None)` – add an output mapping. Omitted steepness preserves the legacy simulator default of 10; explicit nonnegative finite values, including zero, survive XML roundtrips.
+- `add_intracellular_initial_value(cell_type_name, intracellular_name, value)` – set a node's initial value.
+- `add_intracellular_mutation(cell_type_name, intracellular_name, value)` – add a mutation.
+- `is_enabled()` – check whether intracellular models are configured.
+
+`config.save_xml()` exports the per-cell settings. Invalid stochasticity or
+steepness raises `ValueError`; invalid XML values raise `XMLLoadingError`.
 
 ### ConfigLoader
 Utility singleton in `physicell_config/modules/config_loader.py` used by all
@@ -135,7 +140,7 @@ Below is a complete list of public helpers available in each module.
 ### CellTypeModule
 - `add_cell_type(name, parent_type='default', template='default')` – create a new cell type from a template.
 - `set_cycle_model(cell_type, model)` – assign a cycle model (`Ki67_basic`, `Ki67_advanced`, `live`, `cycling_quiescent`, `flow_cytometry`, `flow_cytometry_separated`).
-- `set_cycle_transition_rate(cell_type, from_phase, to_phase, rate)` – override a specific phase transition rate.
+- `set_cycle_transition_rate(cell_type, from_phase, to_phase, rate, fixed_duration=None)` – override a specific phase transition rate. An explicit boolean overrides the fixed-duration flag; omission retains the existing flag or model default.
 - `set_cycle_phase_durations(cell_type, durations)` – set cycle phase durations as a list of `{index, duration, fixed_duration}` dicts; clears any transition rates so `<phase_durations>` is used in the XML output. Both formats are valid in PhysiCell.
 - `set_death_rate(cell_type, death_type, rate)` – set the base death rate for `'apoptosis'` or `'necrosis'`.
 - `set_death_parameters(cell_type, death_type, **params)` – set death model sub-parameters: `unlysed_fluid_change_rate`, `lysed_fluid_change_rate`, `cytoplasmic_biomass_change_rate`, `nuclear_biomass_change_rate`, `calcification_rate`, `relative_rupture_volume`.
@@ -157,12 +162,18 @@ Below is a complete list of public helpers available in each module.
 - `set_custom_data(cell_type, key, value, units='dimensionless', description='', conserved=False)` – add or update a custom data entry.
 - `clear_custom_data(cell_type)` – remove all custom data entries for a cell type.
 - `update_all_cell_types_for_interactions()` – populate live phagocytosis, attack, fusion, and transformation rate dicts for all defined cell types with zero defaults.
+
+The following intracellular methods belong to `config.physiboss`:
+
 - `add_intracellular_model(cell_type, model_type='maboss', bnd_filename='', cfg_filename='')` – attach an intracellular model.
-- `set_intracellular_settings(cell_type, intracellular_dt=None, time_stochasticity=None, scaling=None, start_time=None, inheritance_global=None)` – tweak intracellular options.
+- `set_intracellular_settings(cell_type, intracellular_dt=None, time_stochasticity=None, scaling=None, start_time=None, inheritance_global=None)` – tweak intracellular options. `time_stochasticity` accepts finite nonnegative fractional values, including zero.
 - `add_intracellular_mutation(cell_type, intracellular_name, value)` – force a node value.
 - `add_intracellular_initial_value(cell_type, intracellular_name, value)` – set initial node value.
 - `add_intracellular_input(cell_type, physicell_name, intracellular_name, action='activation', threshold=1, smoothing=0)` – map a substrate or variable to a network node.
-- `add_intracellular_output(cell_type, physicell_name, intracellular_name, action='activation', value=1000000, base_value=0, smoothing=0)` – map a network node to a behavior.
+- `add_intracellular_output(cell_type, physicell_name, intracellular_name, action='activation', value=1000000, base_value=0, smoothing=0, steepness=None)` – map a network node to a behavior. Optional finite nonnegative steepness is exported, including zero; omission keeps the legacy simulator default of 10.
+
+The remaining methods belong to `config.cell_types`:
+
 - `add_to_xml(parent)` – serialize cell definitions to XML.
 - `get_cell_types()` – return all stored cell type data.
 
@@ -221,15 +232,17 @@ Below is a complete list of public helpers available in each module.
 - `get_save_options()` – return save options.
 
 ### PhysiBoSSModule
-- `enable_physiboss(model_file='boolean_model.bnd', initial_values=None, mutations=None, parameters=None)` – activate the Boolean network.
-- `set_time_step(value)` – network step size in minutes.
-- `set_scaling(value)` – scale network speed.
-- `add_initial_value(node, value)` – set a node's initial state.
-- `add_mutation(cell_line, node, value)` – force a mutation for a cell line.
-- `add_parameter(name, value)` – additional simulator parameter.
-- `add_to_xml(parent)` – export settings if enabled.
-- `is_enabled()` – check whether PhysiBoSS is active.
-- `get_settings()` – retrieve current PhysiBoSS options.
+Access these methods through `config.physiboss`:
+
+- `add_intracellular_model(cell_type_name, model_type='maboss', bnd_filename='', cfg_filename='')` – attach a model.
+- `set_intracellular_settings(cell_type_name, intracellular_dt=None, time_stochasticity=None, scaling=None, start_time=None, inheritance_global=None)` – set per-cell options; stochasticity accepts finite nonnegative fractions and zero.
+- `add_intracellular_output(cell_type_name, physicell_name, intracellular_name, action='activation', value=1000000, base_value=0, smoothing=0, steepness=None)` – add an output mapping. Omitted steepness preserves the legacy simulator default of 10; explicit nonnegative finite values, including zero, survive XML roundtrips.
+- `add_intracellular_initial_value(cell_type_name, intracellular_name, value)` – set a node's initial value.
+- `add_intracellular_mutation(cell_type_name, intracellular_name, value)` – add a mutation.
+- `is_enabled()` – check whether intracellular models are configured.
+
+`config.save_xml()` exports the per-cell settings. Invalid stochasticity or
+steepness raises `ValueError`; invalid XML values raise `XMLLoadingError`.
 
 ### ConfigLoader
 - `get_cycle_model(name)`

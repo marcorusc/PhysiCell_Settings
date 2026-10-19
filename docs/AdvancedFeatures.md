@@ -47,7 +47,7 @@ Beyond the basic `add_cell_type`, this module provides extensive control over
 phenotype and intracellular models:
 
 - `set_cycle_model(cell_type, model)` – switch to any of the built-in cycle models.
-- `set_cycle_transition_rate(cell_type, from_phase, to_phase, rate)` – override a specific phase transition rate.
+- `set_cycle_transition_rate(cell_type, from_phase, to_phase, rate, fixed_duration=None)` – override a phase transition rate. Pass `True` or `False` to override its fixed-duration flag; omission preserves the existing flag or model default.
 - `set_cycle_phase_durations(cell_type, durations)` – set cycle phase durations (list of `{index, duration, fixed_duration}`); clears transition rates so `<phase_durations>` is used.
 - `set_death_rate(cell_type, death_type, rate)` – adjust the base apoptosis or necrosis rate.
 - `set_death_parameters(cell_type, death_type, **params)` – set death sub-parameters without direct dict access.
@@ -100,12 +100,35 @@ present in the configuration.
 `PhysiBoSSModule` enables intracellular boolean networks. Typical usage:
 
 ```python
-config.physiboss.enable_physiboss('model.bnd', initial_values={'p53': True})
-config.physiboss.set_time_step(6.0)
-config.physiboss.add_mutation('cancer_cell', 'EGFR', False)
+config.cell_types.add_cell_type('cancer_cell')
+config.physiboss.add_intracellular_model(
+    'cancer_cell', bnd_filename='model.bnd', cfg_filename='model.cfg')
+config.physiboss.set_intracellular_settings(
+    'cancer_cell', intracellular_dt=6.0, time_stochasticity=0.25,
+    inheritance_global=False)
+config.physiboss.add_intracellular_output(
+    'cancer_cell', 'migration speed', 'Move', value=1.0,
+    base_value=0, steepness=10)
+config.physiboss.add_intracellular_mutation('cancer_cell', 'EGFR', False)
 ```
 
-All settings are exported through `add_to_xml()` if the module is enabled.
+`time_stochasticity` accepts finite nonnegative fractions and zero. Output
+`steepness` is optional: omitting it leaves the XML field absent and preserves
+the legacy simulator default of 10. Explicit zero is preserved. Both settings
+are validated on API calls, XML import, and export; negative, nonnumeric, and
+nonfinite values raise errors (XML loads wrap these in `XMLLoadingError`).
+
+`save_xml()`, `load_xml()`, and `copy()` preserve these settings and explicit
+cycle transition `fixed_duration=False`. Existing positional calls still work.
+For example, death rates and disabled motility also survive export/reload:
+
+```python
+config.cell_types.set_death_rate('cancer_cell', 'apoptosis', 0)
+config.cell_types.set_death_rate('cancer_cell', 'necrosis', 0)
+config.cell_types.set_motility('cancer_cell', enabled=False)
+config.save_xml('settings.xml')
+reloaded = PhysiCellConfig.from_xml('settings.xml')
+```
 
 ## Initial Conditions
 

@@ -1,0 +1,39 @@
+name: Tests and package checks
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.8', '3.12', '3.14']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install package and test tools
+        run: python -m pip install . pytest build
+      - name: Check runtime version consistency
+        run: |
+          python - <<'PYVERSIONS'
+          from importlib.metadata import version
+          import physicell_config
+          assert version("physicell-settings") == physicell_config.__version__
+          PYVERSIONS
+      - name: Run XML and public API regressions
+        run: python -m pytest -q tests
+      - name: Build source and wheel distributions
+        run: python -m build

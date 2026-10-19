@@ -2,6 +2,7 @@
 
 from typing import Dict, Any, List, Optional, Union
 import xml.etree.ElementTree as ET
+import math
 from .base import BaseModule
 
 
@@ -12,6 +13,16 @@ class PhysiBoSSModule(BaseModule):
         super().__init__(config)
         self.enabled = False
     
+    @staticmethod
+    def _validate_nonnegative_setting(value: float, name: str) -> None:
+        """Reject invalid numeric settings before mutating the configuration."""
+        try:
+            valid = not isinstance(value, bool) and math.isfinite(float(value)) and float(value) >= 0
+        except (TypeError, ValueError, OverflowError):
+            valid = False
+        if not valid:
+            raise ValueError(f"{name} must be a finite non-negative number, got {value!r}")
+
     # ============================================================================
     # HELPER METHODS
     # ============================================================================
@@ -54,7 +65,7 @@ class PhysiBoSSModule(BaseModule):
         self.enabled = True
     
     def set_intracellular_settings(self, cell_type_name: str, intracellular_dt: float = None,
-                                  time_stochasticity: int = None, scaling: float = None,
+                                  time_stochasticity: float = None, scaling: float = None,
                                   start_time: float = None, inheritance_global: bool = None) -> None:
         """Set intracellular model settings for a cell type.
         
@@ -64,8 +75,8 @@ class PhysiBoSSModule(BaseModule):
             Name of the cell type
         intracellular_dt : float, optional
             Intracellular time step
-        time_stochasticity : int, optional
-            Time stochasticity parameter
+        time_stochasticity : float, optional
+            Finite non-negative time stochasticity; fractional values are supported
         scaling : float, optional
             Scaling factor
         start_time : float, optional
@@ -78,6 +89,9 @@ class PhysiBoSSModule(BaseModule):
         if 'intracellular' not in cell_type['phenotype']:
             raise ValueError(f"No intracellular model configured for cell type '{cell_type_name}'")
         
+        if time_stochasticity is not None:
+            self._validate_nonnegative_setting(time_stochasticity, 'time_stochasticity')
+
         settings = cell_type['phenotype']['intracellular']['settings']
         
         if intracellular_dt is not None:
@@ -153,7 +167,8 @@ class PhysiBoSSModule(BaseModule):
     
     def add_intracellular_output(self, cell_type_name: str, physicell_name: str, intracellular_name: str,
                                 action: str = 'activation', value: float = 1000000, 
-                                base_value: float = 0, smoothing: int = 0) -> None:
+                                base_value: float = 0, smoothing: int = 0,
+                                steepness: Optional[float] = None) -> None:
         """Add an output mapping for the intracellular model.
         
         Parameters
@@ -172,12 +187,18 @@ class PhysiBoSSModule(BaseModule):
             Base value (default: 0)
         smoothing : int
             Smoothing parameter (default: 0)
+        steepness : float, optional
+            Finite non-negative output steepness. Omitted by default, preserving
+            the legacy simulator default of 10; explicit zero is exported.
         """
         cell_type = self._get_cell_type(cell_type_name)
         
         if 'intracellular' not in cell_type['phenotype']:
             raise ValueError(f"No intracellular model configured for cell type '{cell_type_name}'")
         
+        if steepness is not None:
+            self._validate_nonnegative_setting(steepness, 'steepness')
+
         outputs = cell_type['phenotype']['intracellular']['mapping']['outputs']
         outputs.append({
             'physicell_name': physicell_name,
@@ -189,6 +210,8 @@ class PhysiBoSSModule(BaseModule):
                 'smoothing': smoothing
             }
         })
+        if steepness is not None:
+            outputs[-1]['settings']['steepness'] = steepness
     
     def add_intracellular_mutation(self, cell_type_name: str, intracellular_name: str, value: Union[str, bool]) -> None:
         """Add an intracellular mutation for a cell type.
@@ -264,6 +287,7 @@ class PhysiBoSSModule(BaseModule):
             if 'intracellular_dt' in settings:
                 self._create_element(settings_elem, "intracellular_dt", settings['intracellular_dt'])
             if 'time_stochasticity' in settings:
+                self._validate_nonnegative_setting(settings['time_stochasticity'], 'time_stochasticity')
                 self._create_element(settings_elem, "time_stochasticity", settings['time_stochasticity'])
             if 'scaling' in settings:
                 self._create_element(settings_elem, "scaling", settings['scaling'])
@@ -318,6 +342,9 @@ class PhysiBoSSModule(BaseModule):
                             self._create_element(settings_elem, "value", out_settings['value'])
                         if 'base_value' in out_settings:
                             self._create_element(settings_elem, "base_value", out_settings['base_value'])
+                        if 'steepness' in out_settings:
+                            self._validate_nonnegative_setting(out_settings['steepness'], 'steepness')
+                            self._create_element(settings_elem, 'steepness', out_settings['steepness'])
                         if 'smoothing' in out_settings:
                             self._create_element(settings_elem, "smoothing", out_settings['smoothing'])
 
