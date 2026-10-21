@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.3] - 2026-10-21
+
 ### Fixed
 - Preserve explicit zero death rates, disabled motility and imported cycle model identity across XML roundtrips.
 - Preserve per-transition `fixed_duration` flags, including explicit false, and phase-duration representations.
@@ -17,7 +19,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Compatibility
 - Imported cycle dictionaries use canonical `transition_rates`. Code reading internal dictionaries must use that representation.
-- Prepare version 0.6.3; publication is a separate release step.
 
 ## [0.5.0] - 2026-02-20
 
